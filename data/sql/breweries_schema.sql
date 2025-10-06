@@ -78,5 +78,5 @@ CREATE TABLE user_reviews (
     username TEXT NOT NULL,
     rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     review_bodytext TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
