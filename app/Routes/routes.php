@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controllers\AboutController;
+use App\Controllers\BreweriesController;
 use App\Helpers\DateTimeHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -17,7 +18,12 @@ return static function (Slim\App $app): void {
 
     //* NOTE: callback naming pattern: handle<ActionName>, e.g. handleGetPlayers
     //* ROUTE: GET /players
-    //$app->get('/players', [PlayersController::class, 'handleGetPlayers']);
+
+    //* ROUTE: GET /breweries
+    $app->get('/breweries', [BreweriesController::class, 'handleGetBreweries']);
+
+    //* ROUTE: GET /breweries/{brewery_id}
+    $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);
 
     //* ROUTE: GET /ping
     $app->get('/ping', function (Request $request, Response $response, $args) {

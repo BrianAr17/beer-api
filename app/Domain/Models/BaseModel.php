@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Models;
 
+use App\Helpers\PaginationHelper;
 use PDO;
 use App\Helpers\Core\PDOService;
 use Exception;
@@ -133,6 +134,39 @@ abstract class BaseModel
         return (array) $this->run($sql, $args)->fetchAll($fetchMode);
     }
 
+    protected function paginate(string $sql, array $args = [], $fetchMode = PDO::FETCH_ASSOC): array
+    {
+        //* Step 1) Compute how many records (record count) will be in the result set.
+        $records_count = $this->count($sql, $args);
+
+        //* Step 2) Instantiate the pagination helper class.
+        $paginate_helper = new PaginationHelper(
+            $this->current_page,
+            $this->records_per_page,
+            $records_count
+        );
+
+        //* Step 3) Get offset value from the pagination helper.
+        $offset = $paginate_helper->getOffset();
+
+        //* Step 4) Add the following to query. DONE
+        $sql .= " LIMIT $this->records_per_page OFFSET $offset ";
+
+        //* Step 5) Execute the constrained query.
+        $data =  (array) $this->run($sql, $args)->fetchAll($fetchMode);
+
+        //* Step 6) Get the pagination information (meta).
+        $meta = $paginate_helper->getPaginationMetadata();
+
+        //* Step 7) Produce a paginated response: meta + data.
+        //? Return:
+        $response = [
+            "meta" => $meta,
+            "data" => $data
+        ];
+
+        return $response;
+    }
     /**
      * Fetches a single result from a SQL query.
      *
