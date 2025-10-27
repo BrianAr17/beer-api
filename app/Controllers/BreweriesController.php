@@ -3,11 +3,12 @@
 namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
-use App\Exception\HttpBadRequestException;
+use App\Exceptions\HttpBadRequestException;
 use App\Exception\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
 use App\Exceptions\HttpRangeValidationException;
 use App\Exceptions\HttpDateFormatException;
+use App\Exceptions\HttpNotFoundException as ExceptionsHttpNotFoundException;
 use InvalidArgumentException;
 use PDO;
 use PDOException;

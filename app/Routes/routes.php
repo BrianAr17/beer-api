@@ -25,6 +25,13 @@ return static function (Slim\App $app): void {
     //* ROUTE: GET /breweries/{brewery_id}
     $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);
 
+     // GET /locations (Collection Resource)
+    $app->get('/locations', [LocationsController::class, 'handleGetLocations']);
+
+    //  GET /locations/{location_id}
+
+    $app->get('/locations/{location_id}', [LocationsController::class, 'handleGetLocationByID']);
+
     //* ROUTE: GET /ping
     $app->get('/ping', function (Request $request, Response $response, $args) {
 
