@@ -21,6 +21,8 @@ class BreweriesModel extends BaseModel
         $pdo_values = [];
         $sql = "SELECT * FROM breweries WHERE 1";
 
+        
+
         return $this->paginate($sql, $pdo_values);
     }
 

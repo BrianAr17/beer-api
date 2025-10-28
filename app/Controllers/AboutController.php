@@ -16,12 +16,27 @@ class AboutController extends BaseController
     public function handleAboutWebService(Request $request, Response $response): Response
     {
 
+        $resources = [
+            [
+                'name'        => 'breweries',
+                'uri'         => 'http://localhost/beers-api/breweries',
+                'methods'     => ['GET'],
+                'description' => 'Gets a list of zero or more brewery resources that match the request\'s filtering criteria.',
+            ],
+            [
+                'name'        => 'locations',
+                'uri'         => 'http://localhost/beers-api/locations',
+                'methods'     => ['GET'],
+                'description' => 'Gets a list of zero or more location resources that match the request\'s filtering criteria.',
+            ],
+        ];
+
         $data = array(
             'api' => self::API_NAME,
             'version' => self::API_VERSION,
             'about' => 'Welcome! This i a Web service that provides this and that...',
             'authors' => 'FrostyBee',
-            'resources' => '/blah'
+            'resources' => $resources,
         );
 
         return $this->renderJson($response, $data);

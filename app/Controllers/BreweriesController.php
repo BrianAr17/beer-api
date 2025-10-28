@@ -39,7 +39,7 @@ class BreweriesController extends BaseController
         return $response->withHeader(HEADERS_CONTENT_TYPE, APP_MEDIA_TYPE_JSON);
     }
 
-    // ROUTE: GET /vendors/{vendor_id}
+    // ROUTE: GET /breweries/{brewery_id}
    public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
     {
         //* 1) Get the received ID from the URI.
@@ -49,30 +49,18 @@ class BreweriesController extends BaseController
             throw new HttpInvalidNumberException($request, 'Invalid Brewery ID: must be a positive integer');
         }
 
-        //* 2) Fetch the vendor info from the DB by ID.
+        //* 2) Fetch the brewery info from the DB by ID.
         $brewery = $this->breweries_model->getBreweryById($brewery_id);
 
         //* 3) Prepare and return a JSON response.
         return $this->renderJson($response, $brewery);
 
-        //? Validate the: vendor_id
-        //* Checks (What needs to validated) to be implemented:
-        //* 1) If it is set? and not null
-        //* 2) Validate its expected data type: positive int
-        //* Hint: Using PHP built-in: is_int* | Regex:
-        //* 3) Cast the received ID to int. (Happy Path): (int)$vendor_id
-        //$vendor = $this->vendors_model->getVendorById($vendor_id);
-        //! 4 What if the ID was valid but there was no matching record?
-        //* 404 Not Found
 
         if(!$brewery) {
             throw new HttpNotFoundException($request);
         }
 
         if ($brewery === false) {
-
-            //? Option #1: throw an HTTP specialized exception
-            //! throw new HttpNotFoundException($request, "There was no record matching the supplied vendor id...");
 
             //? Alternative PATH
             //? Option #2: Create a well-structured
@@ -85,7 +73,7 @@ class BreweriesController extends BaseController
         }
 
         //? Happy PATH:
-        return $this->renderJson($repsonse, $vendor);
+        //return $this->renderJson($repsonse, $vendor);
 
         //! 4) What if the ID was invalid?
         //? Send a very-well structured JSON error response
