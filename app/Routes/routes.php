@@ -30,7 +30,6 @@ return static function (Slim\App $app): void {
     $app->get('/locations', [LocationsController::class, 'handleGetLocations']);
 
     //  GET /locations/{location_id}
-
     $app->get('/locations/{location_id}', [LocationsController::class, 'handleGetLocationByID']);
 
     //* ROUTE: GET /ping

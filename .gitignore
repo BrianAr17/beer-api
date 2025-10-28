@@ -2,7 +2,7 @@ env.php
 config/env.php
 
 # Composer and dependencies
-vendor/
+breweries/
 build/
 node_modules/
 

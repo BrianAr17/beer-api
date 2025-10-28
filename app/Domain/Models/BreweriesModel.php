@@ -18,7 +18,6 @@ class BreweriesModel extends BaseModel
 
     public function getBreweries(array $filters): array
     {
-
         $pdo_values = [];
         $sql = "SELECT * FROM breweries WHERE 1";
 
