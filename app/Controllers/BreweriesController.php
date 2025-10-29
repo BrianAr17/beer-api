@@ -8,18 +8,52 @@ use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
 use App\Validation\ValidationHelper;
-use App\Exceptions\HttpRangeValidationException;
-use App\Exceptions\HttpNotFoundException as ExceptionsHttpNotFoundException;
-use InvalidArgumentException;
-use PDO;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+/**
+ * Controller handling Brewery resources.
+ *
+ * Validates query/path parameters, supports pagination and sorting,
+ * delegates data access to the model, and returns JSON responses.
+ */
 class BreweriesController extends BaseController
 {
+    /**
+     * Create a new BreweriesController.
+     *
+     * @param BreweriesModel $breweries_model Domain model for brewery data access.
+     */
     public function __construct(private BreweriesModel $breweries_model) {}
 
+    /**
+     * Handle GET /breweries
+     *
+     * Accepts optional filters:
+     * - name, country, city, state, owner_name (strings)
+     * - founded_year, employee_count (integers)
+     *
+     * Sorting:
+     * - sort_by: one of brewery_id, name, brewery_type, city, state, country,
+     *            website_url, founded_year, owner_name, rating_avg, employee_count
+     * - order: asc|desc
+     *
+     * Pagination:
+     * - page, page_size (integers)
+     *
+     * Returns JSON list (paginated) of breweries.
+     *
+     * @param Request  $request  Incoming HTTP request (query params used as filters).
+     * @param Response $response HTTP response to populate.
+     *
+     * @return Response JSON response with breweries and pagination metadata.
+     *
+     * @throws HttpInvalidStringException If a string filter has invalid characters.
+     * @throws HttpInvalidNumberException If a numeric filter is not a valid integer.
+     * @throws HttpBadRequestException    If sort_by/order are invalid values.
+     * @throws PDOException               On underlying database errors.
+     */
     public function handleGetBreweries(Request $request, Response $response): Response
     {
         $filters = $request->getQueryParams();
@@ -91,7 +125,21 @@ class BreweriesController extends BaseController
         return $response->withHeader(HEADERS_CONTENT_TYPE, APP_MEDIA_TYPE_JSON);
     }
 
-    // ROUTE: GET /breweries/{brewery_id}
+    /**
+     * Handle GET /breweries/{brewery_id}
+     *
+     * Returns a single brewery by its ID in JSON format.
+     *
+     * @param Request  $request  Incoming HTTP request.
+     * @param Response $response HTTP response to populate.
+     * @param array    $uri_args Route arguments; expects ['brewery_id' => int].
+     *
+     * @return Response JSON response with the brewery record.
+     *
+     * @throws HttpInvalidNumberException If brewery_id is not a positive integer.
+     * @throws HttpNotFoundException      If the brewery is not found.
+     * @throws PDOException               On underlying database errors.
+     */
    public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
     {
         //* 1) Get the received ID from the URI.
