@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
+use App\Domain\Services\BreweriesService;
 use App\Exceptions\HttpBadRequestException;
 use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
@@ -25,7 +26,7 @@ class BreweriesController extends BaseController
      *
      * @param BreweriesModel $breweries_model Domain model used for data access.
      */
-    public function __construct(private BreweriesModel $breweries_model) {}
+    public function __construct(private BreweriesModel $breweries_model, private BreweriesService $breweries_service) {}
 
     /**
      * Handle GET /breweries.
@@ -148,6 +149,22 @@ class BreweriesController extends BaseController
         $response->getBody()->write(json_encode($brewery));
         return $response->withHeader('Content-Type', 'application/json');
 
+    }
+
+    //* POST /breweries
+    public function handleCreateBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        //* 1) Get the request payload (what the client sent embedded in the request body).
+        $data = $request->getParsedBody();
+        //dd($data);
+        $result = $this->breweries_service->doCreateBrewery($data);
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData());
+        }
+
+        return $response;
     }
      /// End of the callback
 
