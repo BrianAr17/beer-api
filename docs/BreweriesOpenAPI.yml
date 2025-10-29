@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: My Breweries API
+  description: A simple API for managing brewery data
+  version: 1.0.0
+
+servers:
+  - url: http://localhost/beer-api
+    description: Local server
+
+paths:
+  /breweries:
+    get:
+      summary: Get all breweries
+      parameters:
+        - name: brewery_id
+          in: query
+          schema:
+            type: integer
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: brewery_type
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: website_url
+          in: query
+          schema:
+            type: string
+            format: uri
+        - name: founded_year
+          in: query
+          schema:
+            type: integer
+        - name: owner_name
+          in: query
+          schema:
+            type: string
+        - name: rating_avg
+          in: query
+          schema:
+            type: number
+            format: float
+        - name: employee_count
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of breweries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Brewery'
+  /breweries/{brewery_id}:
+    get:
+      summary: Get all breweries by ID
+      parameters:
+        - name: brewery_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Brewery found
+        '404':
+          description: Brewery not found
+components:
+  schemas:
+    Brewery:
+      type: object
+      required:
+        - brewery_id
+        - name
+        - brewery_type
+        - city
+        - state
+        - country
+        - website_url
+        - founded_year
+        - owner_name
+        - rating_avg
+        - employee_count
+      properties:
+        brewery_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Unibroue"
+        brewery_type:
+          type: string
+          example: "Craft"
+        city:
+          type: string
+          example: "Montreal"
+        state:
+          type: string
+          example: "Quebec"
+        country:
+          type: string
+          example: "Canada"
+        website_url:
+          type: string
+          format: uri
+          example: "https://www.unibroue.com"
+        founded_year:
+          type: integer
+          example: 1992
+        owner_name:
+          type: string
+          example: "Matt Phillips"
+        rating_avg:
+          type: number
+          format: float
+          example: 4.6
+        employee_count:
+          type: integer
+          example: 250
