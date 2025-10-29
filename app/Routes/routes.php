@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\AboutController;
 use App\Controllers\BreweriesController;
-use App\Controllers\LocationsController;
+use App\Controllers\DistributorsController;
 use App\Helpers\DateTimeHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -24,11 +24,12 @@ return static function (Slim\App $app): void {
     //* ROUTE: GET /breweries/{brewery_id}
     $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);
 
-     // GET /locations (Collection Resource)
-    $app->get('/locations', [LocationsController::class, 'handleGetLocations']);
+    //* ROUTE: Distributors
+    // GET all distributors
+    $app->get('/distributors', [DistributorsController::class, 'handleGetDistributors']);
 
-    //  GET /locations/{location_id}
-    $app->get('/locations/{location_id}', [LocationsController::class, 'handleGetLocationByID']);
+    // GET distributor by ID
+    $app->get('/distributors/{distributor_id}', [DistributorsController::class, 'handleGetDistributorByID']);
 
     //* ROUTE: GET /ping
     $app->get('/ping', function (Request $request, Response $response, $args) {
