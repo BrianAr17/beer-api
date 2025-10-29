@@ -2,8 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Domain\Models\BreweriesModel;
-use App\Domain\Services\BreweriesService;
+use App\Domain\Models\BeerStylesModel;
+use App\Domain\Services\BeerStylesService;
 use App\Exceptions\HttpBadRequestException;
 use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
@@ -19,14 +19,14 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  * Validates inputs, applies pagination and sorting, delegates to the model,
  * and returns JSON responses for brewery collections and single records.
  */
-class BreweriesController extends BaseController
+class BeerStylesController extends BaseController
 {
     /**
      * Create a new BreweriesController.
      *
-     * @param BreweriesModel $breweries_model Domain model used for data access.
+     * @param BeerStylesModel $breweries_model Domain model used for data access.
      */
-    public function __construct(private BreweriesModel $breweries_model, private BreweriesService $breweries_service) {}
+    public function __construct(private BeerStylesModel $beer_styles_model, private BeerStylesService $beer_styles_service) {}
 
     /**
      * Handle GET /breweries.
@@ -43,50 +43,55 @@ class BreweriesController extends BaseController
      * @throws HttpBadRequestException    If sort_by or order have invalid values.
      * @throws PDOException               On database-related errors.
      */
-    public function handleGetBreweries(Request $request, Response $response): Response
+    public function handleGetBeerStyles(Request $request, Response $response): Response
     {
         $filters = $request->getQueryParams();
 
         $name = $filters['name'] ?? null;
-        $country = $filters['country'] ?? null;
-        $city = $filters['city'] ??  null;
-        $state = $filters['state'] ??  null;
-        $owner_name = $filters['owner_name'] ??  null;
-        $founded_year = $filters['founded_year'] ?? null;
-        $employee_count = $filters['employee_count'] ?? null;
+        $description = $filters['description'] ?? null;
+        $origin_country = $filters['origin_country'] ??  null;
+        $color = $filters['color'] ??  null;
+        $typical_abv_range = $filters['typical_abv_range'] ??  null;
+        $glass_type = $filters['glass_type'] ?? null;
+        $popularity_rank = $filters['popularity_rank'] ?? null;
+        $pairing_foods = $filters['pairing_foods'] ?? null;
+
 
         if ($name !== null && !ValidationHelper::isAlpha($name)) {
             throw new HttpInvalidStringException($request);
         }
 
-        if ($country !== null && !ValidationHelper::isAlpha($country)) {
+        if ($description !== null && !ValidationHelper::isAlpha($description)) {
             throw new HttpInvalidStringException($request);
         }
 
-        if ($city !== null && !ValidationHelper::isAlpha($city)) {
+        if ($origin_country !== null && !ValidationHelper::isAlpha($origin_country)) {
             throw new HttpInvalidStringException($request);
         }
 
-        if ($state !== null && !ValidationHelper::isAlpha($state)) {
+        if ($color !== null && !ValidationHelper::isAlpha($color)) {
             throw new HttpInvalidStringException($request);
         }
 
-        if ($owner_name !== null && !ValidationHelper::isAlpha($owner_name)) {
+        if ($typical_abv_range !== null && !ValidationHelper::isAlpha($typical_abv_range)) {
             throw new HttpInvalidStringException($request);
         }
 
-        if ($founded_year !== null && !ValidationHelper::isInt($founded_year)) {
+        if ($glass_type !== null && !ValidationHelper::isInt($glass_type)) {
             throw new HttpInvalidNumberException($request);
         }
 
-        if ($employee_count !== null && !ValidationHelper::isInt($employee_count)) {
+        if ($popularity_rank !== null && !ValidationHelper::isInt($popularity_rank)) {
+            throw new HttpInvalidNumberException($request);
+        }
+        if ($pairing_foods !== null && !ValidationHelper::isInt($pairing_foods)) {
             throw new HttpInvalidNumberException($request);
         }
 
-        $sortBy = $filters['sort_by'] ?? 'brewery_id';
+        $sortBy = $filters['sort_by'] ?? 'style_id';
         $order  = strtolower($filters['order'] ?? 'asc');
 
-        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country','website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
+        $validSortByFields = ['style_id', 'name', 'description', 'origin_country', 'color', 'typical_abv_range', 'glass_type', 'popularity_rank', 'pairing_foods'];
         $validOrders = ['asc', 'desc'];
 
         if (!in_array($sortBy, $validSortByFields)) {
@@ -101,11 +106,11 @@ class BreweriesController extends BaseController
 
         $page = $filters['page'] ?? null;
         $pageSize = $filters['page_size'] ?? null;
-        if ($page !==null && $pageSize !== null) {
-            $this->breweries_model->setPaginationOptions((int)$page, (int)$pageSize);
+        if ($page !== null && $pageSize !== null) {
+            $this->beer_styles_model->setPaginationOptions((int)$page, (int)$pageSize);
         }
 
-        $breweries = $this->breweries_model->getBreweries($filters);
+        $breweries = $this->beer_styles_model->getBeerStyles($filters);
 
         // Step 5: Encode and return JSON
         $payload = json_encode($breweries, JSON_PRETTY_PRINT);
@@ -128,37 +133,34 @@ class BreweriesController extends BaseController
      * @throws HttpNotFoundException      If the brewery does not exist.
      * @throws PDOException               On database-related errors.
      */
-   public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
+    public function handleGetBeerStyleByID(Request $request, Response $response, array $uri_args): Response
     {
         //* 1) Get the received ID from the URI.
-        $brewery_id = $uri_args["brewery_id"];
+        $style_id = $uri_args["style_id"];
 
-        if ($brewery_id <= 0 || !ValidationHelper::isInt($brewery_id)) {
+        if ($style_id <= 0 || !ValidationHelper::isInt($style_id)) {
             throw new HttpInvalidNumberException($request, 'Invalid Brewery ID: must be a positive integer');
         }
 
 
         //* 2) Fetch the brewery info from the DB by ID.
-        $brewery = $this->breweries_model->getBreweryById($brewery_id);
+        $beerStyle = $this->beer_styles_model->getBeerStyleById($style_id);
 
 
-        if(!$brewery) {
+        if (!$beerStyle) {
             throw new HttpNotFoundException($request);
         }
 
-        $response->getBody()->write(json_encode($brewery));
+        $response->getBody()->write(json_encode($beerStyle));
         return $response->withHeader('Content-Type', 'application/json');
-
     }
 
-    //* POST /breweries
-    public function handleCreateBrewery(Request $request, Response $response): Response
+    //* POST /beer_styles
+    public function handleCreateBeerStyle(Request $request, Response $response): Response
     {
-        echo "QUACK!";
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
-        //dd($data);
-        $result = $this->breweries_service->doCreateBrewery($data);
+        $result = $this->beer_styles_service->doCreateBeerStyle($data);
         if ($result->isSuccess()) {
             //! return a json response
             return $this->renderJson($response, $result->getData());
@@ -166,6 +168,6 @@ class BreweriesController extends BaseController
 
         return $response;
     }
-     /// End of the callback
+    /// End of the callback
 
 }

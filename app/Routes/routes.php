@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\AboutController;
 use App\Controllers\BreweriesController;
+use App\Controllers\BeerStylesController;
 use App\Controllers\DistributorsController;
 use App\Helpers\DateTimeHelper;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -17,13 +18,17 @@ return static function (Slim\App $app): void {
     //* ROUTE: GET /
     $app->get('/', [AboutController::class, 'handleAboutWebService']);
 
-
+    //! Breweries
     //* ROUTE: GET /breweries
     $app->get('/breweries', [BreweriesController::class, 'handleGetBreweries']);
+
+    //* ROUTE: POST /breweries
+    $app->post('/breweries', [BreweriesController::class, "handleCreateBrewery"]);
 
     //* ROUTE: GET /breweries/{brewery_id}
     $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);
 
+    //! Distributors
     //* ROUTE: Distributors
     // GET all distributors
     $app->get('/distributors', [DistributorsController::class, 'handleGetDistributors']);
@@ -31,6 +36,17 @@ return static function (Slim\App $app): void {
     // GET distributor by ID
     $app->get('/distributors/{distributor_id}', [DistributorsController::class, 'handleGetDistributorByID']);
 
+    //! Beer Styles
+    //* ROUTE: GET /beer-styles
+    $app->get('/beer-styles', [BeerStylesController::class, "handleGetBeerStyles"]);
+
+    //* ROUTE: GET /beer-styles/{style_id}
+    $app->get('/beer-styles/{style_id}', [BeerStylesController::class, 'handleGetBeerStyleByID']);
+
+    //* ROUTE: POST /beer-styles
+    $app->post('/beer-styles', [BeerStylesController::class, "handleCreateBeerStyle"]);
+
+    //! PING
     //* ROUTE: GET /ping
     $app->get('/ping', function (Request $request, Response $response, $args) {
 

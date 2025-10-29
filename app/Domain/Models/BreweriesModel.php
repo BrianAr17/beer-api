@@ -147,6 +147,15 @@ class BreweriesModel extends BaseModel
         return $brewery;
     }
 
+    //!Create function for breweries services
+    //* For iteration #2
+    public function insertBrewery(array $new_brewery) {
+        return $this->insert("breweries", $new_brewery);
+        //TODO: READ THE DOC, you have examples of their usage.
+        //return $this->insert("breweries", $new_brewery);
+        //return $this->insert("breweries", $new_brewery);
+    }
+
     /**
      * Build an ORDER BY clause from user input safely.
      *
