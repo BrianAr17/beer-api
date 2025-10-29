@@ -1,0 +1,306 @@
+openapi: 3.0.3
+info:
+  title: Distributors API
+  description: >
+    RESTful web service for managing distributors.
+    Provides filtered, sorted, and paginated access to distributor data.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/beer-api
+    description: Local development server
+
+paths:
+  /distributors:
+    get:
+      summary: Get a list of distributors
+      description: Retrieve a paginated list of distributors with optional filtering and sorting.
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by distributor name (partial match)
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: contact_email
+          in: query
+          schema:
+            type: string
+        - name: phone_number
+          in: query
+          schema:
+            type: string
+        - name: founded_year
+          in: query
+          schema:
+            type: integer
+        - name: license_number
+          in: query
+          schema:
+            type: string
+        - name: warehouse_count
+          in: query
+          schema:
+            type: integer
+        - name: rating_avg
+          in: query
+          schema:
+            type: number
+            format: float
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [distributor_id, name, region, contact_email, phone_number, founded_year, license_number, warehouse_count, rating_avg]
+          description: Field to sort results
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: Sort order
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of distributors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributorList'
+        '400':
+          description: Invalid filter or sorting parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new distributor
+      description: Add a new distributor to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDistributor'
+            example:
+              name: "Example Distributor"
+              region: "Ontario"
+              contact_email: "example@distributor.com"
+              phone_number: "+1-123-456-7890"
+              founded_year: 2000
+              license_number: "ON-EX"
+              warehouse_count: 3
+              rating_avg: 4.0
+      responses:
+        '201':
+          description: Distributor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distributor'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /distributors/{distributor_id}:
+    get:
+      summary: Get a distributor by ID
+      description: Retrieve detailed information about a single distributor.
+      parameters:
+        - name: distributor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique ID of the distributor
+      responses:
+        '200':
+          description: Distributor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distributor'
+        '404':
+          description: Distributor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update an existing distributor
+      description: Update the information of an existing distributor by ID.
+      parameters:
+        - name: distributor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDistributor'
+            example:
+              name: "Updated Distributor"
+              region: "Québec"
+              contact_email: "updated@distributor.com"
+              phone_number: "+1-514-555-9999"
+              founded_year: 1999
+              license_number: "QC-UP"
+              warehouse_count: 4
+              rating_avg: 4.5
+      responses:
+        '200':
+          description: Distributor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distributor'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Distributor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a distributor
+      description: Remove a distributor by its ID from the system.
+      parameters:
+        - name: distributor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Distributor deleted successfully
+        '404':
+          description: Distributor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Distributor:
+      type: object
+      properties:
+        distributor_id:
+          type: integer
+        name:
+          type: string
+        region:
+          type: string
+        contact_email:
+          type: string
+        phone_number:
+          type: string
+        founded_year:
+          type: integer
+        license_number:
+          type: string
+        warehouse_count:
+          type: integer
+        rating_avg:
+          type: number
+          format: float
+      required:
+        - distributor_id
+        - name
+
+    NewDistributor:
+      type: object
+      properties:
+        name:
+          type: string
+        region:
+          type: string
+        contact_email:
+          type: string
+        phone_number:
+          type: string
+        founded_year:
+          type: integer
+        license_number:
+          type: string
+        warehouse_count:
+          type: integer
+        rating_avg:
+          type: number
+          format: float
+      required:
+        - name
+        - region
+        - contact_email
+
+    DistributorList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Distributor'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+      example:
+        data:
+          - distributor_id: 1
+            name: "LCBO (Liquor Control Board of Ontario)"
+            region: "Ontario"
+            contact_email: "info@lcbo.com"
+            phone_number: "+1-416-365-5900"
+            founded_year: 1927
+            license_number: "ON-LCBO"
+            warehouse_count: 5
+            rating_avg: 4.3
+          - distributor_id: 2
+            name: "The Beer Store (Brewers Retail Inc.)"
+            region: "Ontario"
+            contact_email: "info@thebeerstore.ca"
+            phone_number: "+1-905-361-1006"
+            founded_year: 1927
+            license_number: "ON-TBS"
+            warehouse_count: 3
+            rating_avg: 4.0
+        page: 1
+        page_size: 10
+        total: 10
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+      example:
+        message: "Resource not found"
+        code: 404
