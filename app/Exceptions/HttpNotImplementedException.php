@@ -1,15 +1,28 @@
 <?php
 
+/**
+ * Slim Framework (https://slimframework.com)
+ *
+ * @license https://github.com/slimphp/Slim/blob/4.x/LICENSE.md (MIT License)
+ */
+
 declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use Slim\Exception\HttpSpecializedException;
-
+/** @api */
 class HttpNotImplementedException extends HttpSpecializedException
 {
+    /**
+     * @var int
+     */
     protected $code = 501;
-    protected $message = "Not implemented";
-    protected string $title = "501 Not Implemented";
-    protected string $description = "This operation is not supported by the server";
+
+    /**
+     * @var string
+     */
+    protected $message = 'Not implemented.';
+
+    protected string $title = '501 Not Implemented';
+    protected string $description = 'The server does not support the functionality required to fulfill the request.';
 }

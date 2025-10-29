@@ -1,15 +1,12 @@
 <?php
-
-declare(strict_types=1);
-
-namespace App\Exceptions;
-
+namespace App\Exception;
 use Slim\Exception\HttpSpecializedException;
 
+/** @api */
 class HttpUnauthorizedException extends HttpSpecializedException
 {
     protected $code = 401;
-    protected $message = "Unauthorized";
-    protected string $title = "401 Unauthorized";
-    protected string $description = "Authentication is required for this resource";
+    protected $message = 'Unauthorized.';
+    protected string $title = '401 Unauthorized';
+    protected string $description = 'The request requires valid user authentication.';
 }

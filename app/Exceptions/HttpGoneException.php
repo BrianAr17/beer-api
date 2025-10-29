@@ -11,17 +11,18 @@ declare(strict_types=1);
 namespace App\Exceptions;
 
 /** @api */
-class HttpForbiddenException extends HttpSpecializedException
+class HttpGoneException extends HttpSpecializedException
 {
     /**
      * @var int
      */
-    protected $code = 403;
+    protected $code = 410;
 
     /**
      * @var string
      */
-    protected $message = 'Forbidden.';
-    protected string $title = '403 Forbidden';
-    protected string $description = 'You are not permitted to perform the requested operation.';
+    protected $message = 'Gone.';
+
+    protected string $title = '410 Gone';
+    protected string $description = 'The target resource is no longer available at the origin server.';
 }
