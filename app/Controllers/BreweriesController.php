@@ -13,46 +13,34 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 /**
- * Controller handling Brewery resources.
+ * Controller for Brewery resources.
  *
- * Validates query/path parameters, supports pagination and sorting,
- * delegates data access to the model, and returns JSON responses.
+ * Validates inputs, applies pagination and sorting, delegates to the model,
+ * and returns JSON responses for brewery collections and single records.
  */
 class BreweriesController extends BaseController
 {
     /**
      * Create a new BreweriesController.
      *
-     * @param BreweriesModel $breweries_model Domain model for brewery data access.
+     * @param BreweriesModel $breweries_model Domain model used for data access.
      */
     public function __construct(private BreweriesModel $breweries_model) {}
 
     /**
-     * Handle GET /breweries
+     * Handle GET /breweries.
      *
-     * Accepts optional filters:
-     * - name, country, city, state, owner_name (strings)
-     * - founded_year, employee_count (integers)
+     * Supports optional filters (name, country, city, state, owner_name, founded_year, employee_count),
+     * validated sorting (sort_by/order), and pagination (page/page_size). Returns a JSON payload.
      *
-     * Sorting:
-     * - sort_by: one of brewery_id, name, brewery_type, city, state, country,
-     *            website_url, founded_year, owner_name, rating_avg, employee_count
-     * - order: asc|desc
+     * @param Request  $request  Incoming HTTP request with query parameters.
+     * @param Response $response HTTP response to write to.
+     * @return Response JSON response containing the breweries list (paginated).
      *
-     * Pagination:
-     * - page, page_size (integers)
-     *
-     * Returns JSON list (paginated) of breweries.
-     *
-     * @param Request  $request  Incoming HTTP request (query params used as filters).
-     * @param Response $response HTTP response to populate.
-     *
-     * @return Response JSON response with breweries and pagination metadata.
-     *
-     * @throws HttpInvalidStringException If a string filter has invalid characters.
+     * @throws HttpInvalidStringException If a string filter contains invalid characters.
      * @throws HttpInvalidNumberException If a numeric filter is not a valid integer.
-     * @throws HttpBadRequestException    If sort_by/order are invalid values.
-     * @throws PDOException               On underlying database errors.
+     * @throws HttpBadRequestException    If sort_by or order have invalid values.
+     * @throws PDOException               On database-related errors.
      */
     public function handleGetBreweries(Request $request, Response $response): Response
     {
@@ -126,19 +114,18 @@ class BreweriesController extends BaseController
     }
 
     /**
-     * Handle GET /breweries/{brewery_id}
+     * Handle GET /breweries/{brewery_id}.
      *
-     * Returns a single brewery by its ID in JSON format.
+     * Returns a single brewery by its identifier as JSON.
      *
      * @param Request  $request  Incoming HTTP request.
-     * @param Response $response HTTP response to populate.
-     * @param array    $uri_args Route arguments; expects ['brewery_id' => int].
-     *
-     * @return Response JSON response with the brewery record.
+     * @param Response $response HTTP response to write to.
+     * @param array<string, int|string> $uri_args Route parameters; expects 'brewery_id'.
+     * @return Response JSON response containing the brewery record.
      *
      * @throws HttpInvalidNumberException If brewery_id is not a positive integer.
-     * @throws HttpNotFoundException      If the brewery is not found.
-     * @throws PDOException               On underlying database errors.
+     * @throws HttpNotFoundException      If the brewery does not exist.
+     * @throws PDOException               On database-related errors.
      */
    public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
     {

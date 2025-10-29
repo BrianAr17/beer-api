@@ -10,40 +10,33 @@ use App\Helpers\Core\PDOService;
 use Exception;
 
 /**
- * Model class for handling all brewery-related database operations.
+ * Model for brewery data access.
  *
- * Provides methods for retrieving, filtering, and sorting brewery data.
- * Uses PDO prepared statements and supports pagination and dynamic filtering.
+ * Provides filtered, sorted, and paginated reads from the `breweries` table.
  */
-
 class BreweriesModel extends BaseModel
 {
+    /**
+     * Construct the model with a PDO service.
+     *
+     * @param PDOService $pdo Database service used to execute queries.
+     */
     public function __construct(private PDOService $pdo)
     {
-        /**
-         * Constructor for BreweriesModel.
-         *
-         * Initializes the database connection through the PDOService dependency.
-         *
-         * @param PDOService $pdo Database service instance used for executing queries.
-         */
         parent::__construct($pdo);
     }
 
     /**
-     * Retrieves a list of breweries with optional filters and sorting.
+     * Retrieve breweries with optional filters, sorting, and pagination.
      *
-     * Filters can include:
-     * - name, brewery_type, city, state, country, website_url, founded_year,
-     *   owner_name, rating_avg, employee_count
+     * Supported filters: name, brewery_type, city, state, country, website_url,
+     * founded_year, owner_name, rating_avg, employee_count. Sorting is restricted
+     * to a whitelist. Pagination is applied via BaseModel::paginate().
      *
-     * Sort options are validated using an allowed list of columns.
-     * Pagination is handled through the BaseModel's `paginate()` method.
+     * @param array $filters Associative array of filter/sort/pagination options.
+     * @return array Result set (may include pagination metadata depending on paginate()).
      *
-     * @param array $filters Associative array of filtering and sorting parameters.
-     * @return array The resulting breweries data set as an array.
-     *
-     * @throws Exception If the query fails to execute.
+     * @throws Exception On query failure.
      */
     public function getBreweries(array $filters): array
     {
@@ -135,12 +128,14 @@ class BreweriesModel extends BaseModel
     }
 
     /**
-     * Retrieves a single brewery record by its ID.
+     * Retrieve a brewery by its identifier.
      *
-     * @param int $brewery_id The unique ID of the brewery.
-     * @return mixed Returns the brewery data as an associative array, or null if not found.
+     * Returns the row as an associative array or null when not found.
      *
-     * @throws Exception If the query fails to execute.
+     * @param int $brewery_id Primary key of the brewery.
+     * @return array|null Brewery row or null if missing.
+     *
+     * @throws Exception On query failure.
      */
     function getBreweryById(int $brewery_id): mixed
     {
@@ -153,15 +148,15 @@ class BreweriesModel extends BaseModel
     }
 
     /**
-     * Builds the ORDER BY clause dynamically based on filter input.
+     * Build an ORDER BY clause from user input safely.
      *
-     * Ensures that sorting only occurs on valid, allowed columns
-     * to prevent SQL injection.
+     * Validates the requested column and direction against a whitelist and
+     * falls back to a default column when needed.
      *
-     * @param array $filters The filters array containing sort parameters.
-     * @param array $allowedMap A whitelist of sortable columns.
-     * @param string $defaultKey The default column to sort by.
-     * @return string A valid ORDER BY SQL clause.
+     * @param array  $filters    Filter array containing 'sort_by' and 'order'.
+     * @param array  $allowedMap Map of allowed sort keys to SQL column names.
+     * @param string $defaultKey Default sort key if input is invalid.
+     * @return string ORDER BY fragment beginning with a space.
      */
     private function buildOrderByFromSortParams(array $filters, array $allowedMap, string $defaultKey): string
     {
