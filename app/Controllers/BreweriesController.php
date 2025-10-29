@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
 use App\Exceptions\HttpBadRequestException;
-use App\Exception\HttpNotFoundException;
+use App\Exceptions\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
 use App\Exceptions\HttpRangeValidationException;
 use App\Exceptions\HttpDateFormatException;
@@ -23,12 +23,27 @@ class BreweriesController extends BaseController
     {
         $filters = $request->getQueryParams();
 
-        $page = $filters['page'] ?? null;
-        $pageSize = $filters['page_size'] ?? null;
-        if ($page !==null & $pageSize !== null) {
-            $this->breweries_model->setPaginationOptions((int)$page, (int)$pageSize);
+        $sortBy = $filters['sort_by'] ?? 'brewery_id';
+        $order  = strtolower($filters['order'] ?? 'asc');
+
+        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country','website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
+        $validOrders = ['asc', 'desc'];
+
+        if (!in_array($sortBy, $validSortByFields)) {
+            throw new HttpBadRequestException($request, "Invalid sort field: {$sortBy}");
+        }
+        if (!in_array($order, $validOrders)) {
+            throw new HttpBadRequestException($request, "Invalid sort order: {$order}");
         }
 
+        $filters['sort_by'] = $sortBy;
+        $filters['order'] = $order;
+
+        $page = $filters['page'] ?? null;
+        $pageSize = $filters['page_size'] ?? null;
+        if ($page !==null && $pageSize !== null) {
+            $this->breweries_model->setPaginationOptions((int)$page, (int)$pageSize);
+        }
 
         $breweries = $this->breweries_model->getBreweries($filters);
 
@@ -53,7 +68,7 @@ class BreweriesController extends BaseController
         $brewery = $this->breweries_model->getBreweryById($brewery_id);
 
         //* 3) Prepare and return a JSON response.
-        return $this->renderJson($response, $brewery);
+        //return $this->renderJson($response, $brewery);
 
 
         if(!$brewery) {
@@ -73,7 +88,7 @@ class BreweriesController extends BaseController
         }
 
         //? Happy PATH:
-        //return $this->renderJson($repsonse, $vendor);
+        return $this->renderJson($response, $brewery);
 
         //! 4) What if the ID was invalid?
         //? Send a very-well structured JSON error response
