@@ -14,34 +14,33 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 /**
- * Controller for Distributor resources.
+ * Controller responsible for managing distributor-related API requests.
  *
- * Validates inputs, applies pagination and sorting, delegates to the model,
- * and returns JSON responses for distributor collections and single records.
+ * Handles client requests, validates input data, manages pagination and sorting,
+ * and communicates with the DistributorsModel for database access.
  */
 class DistributorsController extends BaseController
 {
     /**
-     * Create a new DistributorsController.
+     * Initialize the controller with a model dependency.
      *
-     * @param DistributorsModel $distributors_model Domain model used for data access.
+     * @param DistributorsModel $distributors_model Model providing data access for distributors.
      */
     public function __construct(private DistributorsModel $distributors_model) {}
 
     /**
-     * Handle GET /distributors.
+     * Process GET requests for the /distributors endpoint.
      *
-     * Supports optional filters (name, region, contact_email, phone_number, founded_year,
-     * license_number, warehouse_count, rating_avg), validated sorting (sort_by/order),
-     * and pagination (page/page_size). Returns a JSON payload.
+     * Supports optional filters, sorting, and pagination.
+     * Validates all inputs before retrieving data from the model.
      *
-     * @param Request  $request  Incoming HTTP request with query parameters.
-     * @param Response $response HTTP response to write to.
-     * @return Response JSON response containing the distributors list (paginated).
+     * @param Request  $request  The HTTP request containing query parameters.
+     * @param Response $response The HTTP response used to return JSON data.
+     * @return Response JSON response with a list of distributors.
      *
      * @throws HttpInvalidStringException If a string filter contains invalid characters.
-     * @throws HttpInvalidNumberException If a numeric filter is not a valid integer.
-     * @throws HttpBadRequestException    If sort_by or order have invalid values.
+     * @throws HttpInvalidNumberException If a numeric filter contains an invalid number.
+     * @throws HttpBadRequestException    If the sorting or order parameters are invalid.
      */
     public function handleGetDistributors(Request $request, Response $response): Response
     {
@@ -56,14 +55,14 @@ class DistributorsController extends BaseController
         $warehouse_count = $filters['warehouse_count'] ?? null;
         $rating_avg = $filters['rating_avg'] ?? null;
 
-        // Validate string filters
+        // Validate string-based fields
         foreach (['name', 'region', 'contact_email', 'phone_number', 'license_number'] as $field) {
             if (!empty($filters[$field]) && !ValidationHelper::isAlpha($filters[$field])) {
                 throw new HttpInvalidStringException($request);
             }
         }
 
-        // Validate numeric filters
+        // Validate numeric-based fields
         foreach (['founded_year', 'warehouse_count', 'rating_avg'] as $field) {
             if (!empty($filters[$field]) && !ValidationHelper::isInt($filters[$field])) {
                 throw new HttpInvalidNumberException($request);
@@ -84,11 +83,13 @@ class DistributorsController extends BaseController
             'warehouse_count',
             'rating_avg'
         ];
+
         $validOrders = ['asc', 'desc'];
 
         if (!in_array($sortBy, $validSortByFields)) {
             throw new HttpBadRequestException($request, "Invalid sort field: {$sortBy}");
         }
+
         if (!in_array($order, $validOrders)) {
             throw new HttpBadRequestException($request, "Invalid sort order: {$order}");
         }
@@ -96,8 +97,10 @@ class DistributorsController extends BaseController
         $filters['sort_by'] = $sortBy;
         $filters['order'] = $order;
 
+        // Handle pagination
         $page = $filters['page'] ?? null;
         $pageSize = $filters['page_size'] ?? null;
+
         if ($page !== null && $pageSize !== null) {
             $this->distributors_model->setPaginationOptions((int)$page, (int)$pageSize);
         }
@@ -109,17 +112,17 @@ class DistributorsController extends BaseController
     }
 
     /**
-     * Handle GET /distributors/{distributor_id}.
+     * Process GET requests for the /distributors/{distributor_id} endpoint.
      *
-     * Returns a single distributor by its identifier as JSON.
+     * Retrieves a single distributor record by its ID after validating input.
      *
-     * @param Request  $request  Incoming HTTP request.
-     * @param Response $response HTTP response to write to.
-     * @param array<string,int|string> $uri_args Route parameters; expects 'distributor_id'.
-     * @return Response JSON response containing the distributor record.
+     * @param Request  $request  The HTTP request containing the path parameter.
+     * @param Response $response The HTTP response used to return JSON data.
+     * @param array<string,int|string> $uri_args The URI arguments, must include distributor_id.
+     * @return Response JSON response with a single distributor record.
      *
-     * @throws HttpInvalidNumberException If distributor_id is not a positive integer.
-     * @throws HttpNotFoundException      If the distributor does not exist.
+     * @throws HttpInvalidNumberException If distributor_id is not a valid positive integer.
+     * @throws HttpNotFoundException      If no distributor is found for the provided ID.
      */
     public function handleGetDistributorByID(Request $request, Response $response, array $uri_args): Response
     {
