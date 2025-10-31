@@ -166,6 +166,38 @@ class BreweriesController extends BaseController
 
         return $response;
     }
+
+    //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
+    public function handleUpdateBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        //* 1) Get the request payload (what the client sent embedded in the request body).
+        $data = $request->getParsedBody();
+        //dd($data);
+        $result = $this->breweries_service->doCreateBrewery($data);
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData());
+        }
+
+        return $response;
+    }
+
+    //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
+    public function handleDeleteBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        //* 1) Get the request payload (what the client sent embedded in the request body).
+        $data = $request->getParsedBody();
+        //dd($data);
+        $result = $this->breweries_service->doCreateBrewery($data);
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData());
+        }
+
+        return $response;
+    }
      /// End of the callback
 
 }
