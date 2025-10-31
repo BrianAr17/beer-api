@@ -171,17 +171,24 @@ class BreweriesController extends BaseController
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
         echo "QUACK!";
-        //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
-        //dd($data);
-        $result = $this->breweries_service->doCreateBrewery($data);
+
+        $updateData  = $data['data']  ?? [];
+        $updateWhere = $data['where'] ?? [];
+
+        //* 3) Call the service layer to perform the update.
+        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
+
+        //* 4) Handle the Result object.
         if ($result->isSuccess()) {
             //! return a json response
             return $this->renderJson($response, $result->getData());
         }
 
+        //* 5) If it failed, still return a response object (no JSON by default)
         return $response;
     }
+
 
     //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
     public function handleDeleteBrewery(Request $request, Response $response): Response
@@ -189,8 +196,10 @@ class BreweriesController extends BaseController
         echo "QUACK!";
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
-        //dd($data);
-        $result = $this->breweries_service->doCreateBrewery($data);
+
+        $deleteWhere = $data['where'] ?? [];
+
+        $result = $this->breweries_service->doDeleteBrewery($deleteWhere);
         if ($result->isSuccess()) {
             //! return a json response
             return $this->renderJson($response, $result->getData());
