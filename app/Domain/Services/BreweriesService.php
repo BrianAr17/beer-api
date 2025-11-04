@@ -4,6 +4,7 @@ namespace App\Domain\Services;
 
 use App\Domain\Models\BreweriesModel;
 use App\Helpers\Core\Result;
+use App\Validation\Validator;
 
 class BreweriesService extends BaseService
 {
