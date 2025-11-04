@@ -23,8 +23,14 @@ return static function (Slim\App $app): void {
     //* ROUTE: GET /breweries
     $app->get('/breweries', [BreweriesController::class, 'handleGetBreweries']);
 
+    //* ROUTE: POST /breweries
+    $app->post('/breweries', [BreweriesController::class, 'handleCreateBrewery']);
+
     //* ROUTE: PUT /breweries
     $app->put('/breweries', [BreweriesController::class, "handleUpdateBrewery"]);
+
+    //* ROUTE: DELETE /breweries
+    $app->delete('/breweries', [BreweriesController::class, "handleDeleteBrewery"]);
 
     //* ROUTE: GET /breweries/{brewery_id}
     $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);

@@ -161,10 +161,17 @@ class BreweriesController extends BaseController
         $result = $this->breweries_service->doCreateBrewery($data);
         if ($result->isSuccess()) {
             //! return a json response
-            return $this->renderJson($response, $result->getData());
+            return $this->renderJson($response, $result->getData(), 201);
         }
 
-        return $response;
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to create the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
     }
 
     //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
@@ -182,11 +189,17 @@ class BreweriesController extends BaseController
         //* 4) Handle the Result object.
         if ($result->isSuccess()) {
             //! return a json response
-            return $this->renderJson($response, $result->getData());
+            return $this->renderJson($response, $result->getData(), 201);
         }
 
-        //* 5) If it failed, still return a response object (no JSON by default)
-        return $response;
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to update the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
     }
 
 
@@ -202,10 +215,17 @@ class BreweriesController extends BaseController
         $result = $this->breweries_service->doDeleteBrewery($deleteWhere);
         if ($result->isSuccess()) {
             //! return a json response
-            return $this->renderJson($response, $result->getData());
+            return $this->renderJson($response, $result->getData(), 201);
         }
 
-        return $response;
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to delete the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
     }
      /// End of the callback
 
