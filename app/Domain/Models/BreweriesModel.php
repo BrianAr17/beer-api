@@ -152,8 +152,16 @@ class BreweriesModel extends BaseModel
     public function insertBrewery(array $new_brewery) {
         return $this->insert("breweries", $new_brewery);
         //TODO: READ THE DOC, you have examples of their usage.
-        //return $this->insert("breweries", $new_brewery);
-        //return $this->insert("breweries", $new_brewery);
+    }
+
+    public function updateBrewery(array $update_brewery, array $updateWhere) {
+        return $this->update("breweries", $update_brewery, $updateWhere);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
+    public function deleteBrewery(array $delete_where) {
+        return $this->delete("breweries", $delete_where);
+        //TODO: READ THE DOC, you have examples of their usage.
     }
 
     /**

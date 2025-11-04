@@ -32,4 +32,46 @@ class BreweriesService extends BaseService
         //     $errors
         // );
     }
+
+    public function doUpdateBrewery(array $update_brewery, array $updateWhere) : Result {
+        //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
+
+        //* 2) Pass the collection item to the model.
+        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $updateWhere);
+
+        //* 3) Prepare the Result object to be returned.
+        //? a) Return a successful operation
+        return Result::success(
+            "The new breweries were updated successfully!",
+            ["rows_affected" => $rows_affected]
+        );
+
+        //? b) Return a failure operation
+        // $errors = ["Abey, brewery name must be provided"];
+        // return Result::failure(
+        //     "OH NO, NO GOOD",
+        //     $errors
+        // );
+    }
+
+    public function doDeleteBrewery(array $delete_where) : Result {
+        //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
+
+        //* 2) Pass the collection item to the model.
+        $rows_affected = $this->breweries_model->deleteBrewery($delete_where);
+
+        //* 3) Prepare the Result object to be returned.
+        //? a) Return a successful operation
+        return Result::success(
+            "The new breweries were deleted successfully!",
+            ["rows_affected" => $rows_affected]
+        );
+
+        //? b) Return a failure operation
+        // $errors = ["Abey, brewery name must be provided"];
+        // return Result::failure(
+        //     "OH NO, NO GOOD",
+        //     $errors
+        // );
+    }
 }
