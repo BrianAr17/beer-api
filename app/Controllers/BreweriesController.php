@@ -180,11 +180,8 @@ class BreweriesController extends BaseController
         echo "QUACK!";
         $data = $request->getParsedBody();
 
-        $updateData  = $data['data']  ?? [];
-        $updateWhere = $data['where'] ?? [];
-
         //* 3) Call the service layer to perform the update.
-        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
+        $result = $this->breweries_service->doUpdateBrewery($data, $data);
 
         //* 4) Handle the Result object.
         if ($result->isSuccess()) {
@@ -210,9 +207,8 @@ class BreweriesController extends BaseController
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
 
-        $deleteWhere = $data['where'] ?? [];
 
-        $result = $this->breweries_service->doDeleteBrewery($deleteWhere);
+        $result = $this->breweries_service->doDeleteBrewery($data);
         if ($result->isSuccess()) {
             //! return a json response
             return $this->renderJson($response, $result->getData(), 201);

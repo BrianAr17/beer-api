@@ -8,7 +8,52 @@ use App\Validation\Validator;
 
 class BreweriesService extends BaseService
 {
-    private $brewery_rules = [];
+    private $brewery_rules = array(
+            'name' => array(
+                'required',
+                array('lengthMin', 5)
+            ),
+            'brewery_type' => array(
+                'required',
+                array('lengthMin', 5)
+            ),
+            'city' => array(
+                'required',
+                array('lengthBetween', 1, 25)
+            ),
+            'state' => [
+                'required',
+                ['lengthBetween', 1, 2]
+            ],
+            'country' => [
+                'required',
+                ['lengthBetween', 1, 60]
+            ],
+            'website_url' => [
+                'required',
+                'url'
+            ],
+            'founded_year' => [
+                'required',
+                'integer',
+                ['min', 1000],
+                ['max', 2025]
+            ],
+            'owner_name' => [
+                'required',
+                ['lengthBetween', 1, 50]
+            ],
+            'rating_avg' => [
+                'required',
+                'numeric',
+                ['max', 5]
+            ],
+            'employee_count' => [
+                'required',
+                'numeric',
+                ['min', 1]
+            ],
+        );
 
     public function __construct(private BreweriesModel $breweries_model) {
 
@@ -22,8 +67,11 @@ class BreweriesService extends BaseService
         $validation_result = $this->validateInput($new_breweries[0], $this->brewery_rules);
 
         if (is_array($validation_result)) {
-            //! Invalid inputs.
-            // return Result:failure
+            $errors = ["The inputs are invalid. Please provide correct inputs"];
+             return Result::failure(
+                "Not good!",
+                $errors
+             );
         }
 
         //* 2) Pass the collection item to the model.
@@ -44,11 +92,23 @@ class BreweriesService extends BaseService
         // );
     }
 
-    public function doUpdateBrewery(array $update_brewery, array $updateWhere) : Result {
+    public function doUpdateBrewery(array $update_brewery, array $brewery_id) : Result {
         //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
 
+        // $errors = [];
+        // $validation_result = $this->validateInput($update_brewery[0], $this->brewery_rules);
+
+        // if (is_array($validation_result)) {
+        //     //! Invalid inputs.
+        //     $errors = ["The inputs are invalid. Please provide correct inputs"];
+        //      return Result::failure(
+        //         "Not good!",
+        //         $errors
+        //      );
+        // }
+
         //* 2) Pass the collection item to the model.
-        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $updateWhere);
+        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $brewery_id);
 
         //* 3) Prepare the Result object to be returned.
         //? a) Return a successful operation
