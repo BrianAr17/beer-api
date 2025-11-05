@@ -10,6 +10,7 @@ use App\Helpers\DateTimeHelper;
 use App\Middleware\ContentNegotiationMiddleware;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Validation\Validator;
 
 
 return static function (Slim\App $app): void {

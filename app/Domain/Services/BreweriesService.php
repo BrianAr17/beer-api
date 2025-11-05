@@ -8,6 +8,8 @@ use App\Validation\Validator;
 
 class BreweriesService extends BaseService
 {
+    private $brewery_rules = [];
+
     public function __construct(private BreweriesModel $breweries_model) {
 
     }
@@ -15,6 +17,14 @@ class BreweriesService extends BaseService
     //* Implement at least 3 methods for creating, updating, deleting collection items.
     public function doCreateBrewery(array $new_breweries) : Result {
         //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
+
+        $errors = [];
+        $validation_result = $this->validateInput($new_breweries[0], $this->brewery_rules);
+
+        if (is_array($validation_result)) {
+            //! Invalid inputs.
+            // return Result:failure
+        }
 
         //* 2) Pass the collection item to the model.
         $last_inserted_id = $this->breweries_model->insertBrewery($new_breweries[0]);
