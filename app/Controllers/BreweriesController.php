@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
+use App\Domain\Services\BreweriesService;
 use App\Exceptions\HttpBadRequestException;
 use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
@@ -25,7 +26,7 @@ class BreweriesController extends BaseController
      *
      * @param BreweriesModel $breweries_model Domain model used for data access.
      */
-    public function __construct(private BreweriesModel $breweries_model) {}
+    public function __construct(private BreweriesModel $breweries_model, private BreweriesService $breweries_service) {}
 
     /**
      * Handle GET /breweries.
@@ -148,6 +149,83 @@ class BreweriesController extends BaseController
         $response->getBody()->write(json_encode($brewery));
         return $response->withHeader('Content-Type', 'application/json');
 
+    }
+
+    //* POST /breweries
+    public function handleCreateBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        //* 1) Get the request payload (what the client sent embedded in the request body).
+        $data = $request->getParsedBody();
+        //dd($data);
+        $result = $this->breweries_service->doCreateBrewery($data);
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData(), 201);
+        }
+
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to create the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
+    }
+
+    //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
+    public function handleUpdateBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        $data = $request->getParsedBody();
+
+        $updateData  = $data['data']  ?? [];
+        $updateWhere = $data['where'] ?? [];
+
+        //* 3) Call the service layer to perform the update.
+        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
+
+        //* 4) Handle the Result object.
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData(), 201);
+        }
+
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to update the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
+    }
+
+
+    //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
+    public function handleDeleteBrewery(Request $request, Response $response): Response
+    {
+        echo "QUACK!";
+        //* 1) Get the request payload (what the client sent embedded in the request body).
+        $data = $request->getParsedBody();
+
+        $deleteWhere = $data['where'] ?? [];
+
+        $result = $this->breweries_service->doDeleteBrewery($deleteWhere);
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData(), 201);
+        }
+
+        //* The operation failed, return an error response.
+        $payload = [
+            "status" => "error",
+            "message" => "Failed to delete the new brewery, refer to the details below",
+            "details" => $result->getErrors()
+        ];
+
+        return $this->renderJson($response, $payload, 400);
     }
      /// End of the callback
 
