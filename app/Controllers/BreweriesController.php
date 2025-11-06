@@ -180,8 +180,11 @@ class BreweriesController extends BaseController
         echo "QUACK!";
         $data = $request->getParsedBody();
 
+        $updateData  = $data['data']  ?? [];
+        $updateWhere = $data['where'] ?? [];
+
         //* 3) Call the service layer to perform the update.
-        $result = $this->breweries_service->doUpdateBrewery($data, $data);
+        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
 
         //* 4) Handle the Result object.
         if ($result->isSuccess()) {

@@ -92,7 +92,7 @@ class BreweriesService extends BaseService
         // );
     }
 
-    public function doUpdateBrewery(array $update_brewery, array $brewery_id) : Result {
+    public function doUpdateBrewery(array $update_brewery, array $updateWhere) : Result {
         //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
 
         // $errors = [];
@@ -108,7 +108,7 @@ class BreweriesService extends BaseService
         // }
 
         //* 2) Pass the collection item to the model.
-        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $brewery_id);
+        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $updateWhere);
 
         //* 3) Prepare the Result object to be returned.
         //? a) Return a successful operation

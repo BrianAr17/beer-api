@@ -154,8 +154,8 @@ class BreweriesModel extends BaseModel
         //TODO: READ THE DOC, you have examples of their usage.
     }
 
-    public function updateBrewery(array $update_brewery, array $brewery_id) {
-        return $this->update("breweries", $update_brewery, $brewery_id);
+    public function updateBrewery(array $update_brewery, array $updateWhere) {
+        return $this->update("breweries", $update_brewery, $updateWhere);
         //TODO: READ THE DOC, you have examples of their usage.
     }
 
