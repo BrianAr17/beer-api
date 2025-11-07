@@ -177,29 +177,100 @@ class BreweriesController extends BaseController
     //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
-        $data = $request->getParsedBody();
-
-        $updateData  = $data['data']  ?? [];
-        $updateWhere = $data['where'] ?? [];
-
-        //* 3) Call the service layer to perform the update.
-        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
-
-        //* 4) Handle the Result object.
-        if ($result->isSuccess()) {
-            //! return a json response
-            return $this->renderJson($response, $result->getData(), 201);
+        $body = $request->getParsedBody();
+        if ($body === null) {
+            return $this->renderJson($response, [
+                "status" => "error",
+                "message" => "Invalid or missing JSON body."
+            ], 400);
         }
 
-        //* The operation failed, return an error response.
-        $payload = [
-            "status" => "error",
-            "message" => "Failed to update the new brewery, refer to the details below",
-            "details" => $result->getErrors()
-        ];
+        $isList = is_array($body) && array_keys($body) === range(0, count($body) - 1);
+        $items = $isList ? $body : [$body];
 
-        return $this->renderJson($response, $payload, 400);
+        if (empty($items)) {
+            return $this->renderJson($response, [
+                "status" => "error",
+                "message" => "Empty array provided."
+            ], 400);
+        }
+
+        $results = [];
+        $totalRows = 0;
+
+        foreach ($items as $idx => $item) {
+            if (!is_array($item)) {
+                $results[] = [
+                    "index" => $idx,
+                    "status" => "error",
+                    "message" => "Each item must be an object with fields."
+                ];
+                continue;
+            }
+
+            if (!isset($item['brewery_id'])) {
+                $results[] = [
+                    "index" => $idx,
+                    "status" => "error",
+                    "message" => "Missing brewery_id in item."
+                ];
+                continue;
+            }
+
+            $breweryId = $item['brewery_id'];
+            if (!is_numeric($breweryId)) {
+                $results[] = [
+                    "index" => $idx,
+                    "status" => "error",
+                    "message" => "brewery_id must be numeric."
+                ];
+                continue;
+            }
+
+            $updateData = $item;
+            unset($updateData['brewery_id']);
+
+            if (empty($updateData)) {
+                $results[] = [
+                    "index" => $idx,
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "error",
+                    "message" => "No fields to update for this item."
+                ];
+                continue;
+            }
+
+            $serviceResult = $this->breweries_service->doUpdateBrewery(
+                $updateData,
+                ['brewery_id' => (int)$breweryId]
+            );
+
+            if ($serviceResult->isSuccess()) {
+                $rows = (int)($serviceResult->getData()['rows_affected'] ?? 0);
+                $totalRows += $rows;
+
+                $results[] = [
+                    "index" => $idx,
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "ok",
+                    "rows_affected" => $rows
+                ];
+            } else {
+                $results[] = [
+                    "index" => $idx,
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "error",
+                    "message" => "Update failed",
+                    "details" => $serviceResult->getErrors()
+                ];
+            }
+        }
+
+        return $this->renderJson($response, [
+            "status" => "ok",
+            "total_rows_affected" => $totalRows,
+            "results" => $results
+        ], 200);
     }
 
 
@@ -207,23 +278,39 @@ class BreweriesController extends BaseController
     public function handleDeleteBrewery(Request $request, Response $response): Response
     {
         echo "QUACK!";
-        //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
 
+        $ids = [];
 
-        $result = $this->breweries_service->doDeleteBrewery($data);
+        if (isset($data[0]) && is_array($data[0])) {
+            foreach ($data as $item) {
+                if (isset($item['brewery_id'])) {
+                    $ids[] = (int)$item['brewery_id'];
+                }
+            }
+        } elseif (is_array($data)) {
+            $ids = array_map('intval', $data);
+        }
+
+        if (empty($ids)) {
+            return $this->renderJson($response, [
+                "status" => "error",
+                "message" => "No brewery IDs provided for deletion"
+            ], 400);
+        }
+
+        $result = $this->breweries_service->doDeleteBrewery($ids);
+
         if ($result->isSuccess()) {
             //! return a json response
             return $this->renderJson($response, $result->getData(), 201);
         }
 
-        //* The operation failed, return an error response.
         $payload = [
             "status" => "error",
             "message" => "Failed to delete the new brewery, refer to the details below",
             "details" => $result->getErrors()
         ];
-
         return $this->renderJson($response, $payload, 400);
     }
      /// End of the callback

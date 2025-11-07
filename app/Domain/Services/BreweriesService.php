@@ -125,24 +125,34 @@ class BreweriesService extends BaseService
         // );
     }
 
-    public function doDeleteBrewery(array $delete_where) : Result {
-        //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
+    public function doDeleteBrewery(array $ids): Result
+    {
 
-        //* 2) Pass the collection item to the model.
-        $rows_affected = $this->breweries_model->deleteBrewery($delete_where);
+        $errors = [];
+        $validation_result = $this->validateInput($ids[0], $this->brewery_rules);
 
-        //* 3) Prepare the Result object to be returned.
-        //? a) Return a successful operation
-        return Result::success(
-            "The new breweries were deleted successfully!",
-            ["rows_affected" => $rows_affected]
-        );
+        if (is_array($validation_result)) {
+            $errors = ["The inputs are invalid. Please provide correct inputs"];
+             return Result::failure(
+                "Not good!",
+                $errors
+             );
+        }
 
-        //? b) Return a failure operation
-        // $errors = ["Abey, brewery name must be provided"];
-        // return Result::failure(
-        //     "OH NO, NO GOOD",
-        //     $errors
-        // );
+        $rowsDeleted = 0;
+
+        foreach ($ids as $id) {
+            $rowsDeleted += $this->breweries_model->deleteBrewery(['brewery_id' => $id]);
+        }
+
+        if ($rowsDeleted < 1) {
+            return Result::failure("No rows deleted (IDs may not exist)", [
+                "rows_deleted" => $rowsDeleted
+            ]);
+        }
+
+        return Result::success("Breweries deleted successfully", [
+            "rows_deleted" => $rowsDeleted
+        ]);
     }
 }
