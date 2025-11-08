@@ -79,59 +79,29 @@ class BreweriesService extends BaseService
 
         //* 3) Prepare the Result object to be returned.
         //? a) Return a successful operation
-        return Result::success(
-            "The new breweries were created successfully!",
-            ["last_inserted_id" => $last_inserted_id]
-        );
-
-        //? b) Return a failure operation
-        // $errors = ["Abey, brewery name must be provided"];
-        // return Result::failure(
-        //     "OH NO, NO GOOD",
-        //     $errors
-        // );
+        if ($last_inserted_id) {
+            return Result::success(
+                "The new breweries were created successfully!",
+                ["last_inserted_id" => $last_inserted_id]
+            );
+        } else {
+            //? b) Return a failure operation
+            $errors = ["Abey, brewery name must be provided"];
+            return Result::failure(
+                "OH NO, NO GOOD",
+                $errors
+            );
+        }
     }
 
     public function doUpdateBrewery(array $update_brewery, array $updateWhere) : Result {
         //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
 
-        // $errors = [];
-        // $validation_result = $this->validateInput($update_brewery[0], $this->brewery_rules);
-
-        // if (is_array($validation_result)) {
-        //     //! Invalid inputs.
-        //     $errors = ["The inputs are invalid. Please provide correct inputs"];
-        //      return Result::failure(
-        //         "Not good!",
-        //         $errors
-        //      );
-        // }
-
-        //* 2) Pass the collection item to the model.
-        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $updateWhere);
-
-        //* 3) Prepare the Result object to be returned.
-        //? a) Return a successful operation
-        return Result::success(
-            "The new breweries were updated successfully!",
-            ["rows_affected" => $rows_affected]
-        );
-
-        //? b) Return a failure operation
-        // $errors = ["Abey, brewery name must be provided"];
-        // return Result::failure(
-        //     "OH NO, NO GOOD",
-        //     $errors
-        // );
-    }
-
-    public function doDeleteBrewery(array $ids): Result
-    {
-
         $errors = [];
-        $validation_result = $this->validateInput($ids[0], $this->brewery_rules);
+        $validation_result = $this->validateInput($update_brewery, $this->brewery_rules);
 
         if (is_array($validation_result)) {
+            //! Invalid inputs.
             $errors = ["The inputs are invalid. Please provide correct inputs"];
              return Result::failure(
                 "Not good!",
@@ -139,20 +109,67 @@ class BreweriesService extends BaseService
              );
         }
 
+        //* 2) Pass the collection item to the model.
+        $rows_affected = $this->breweries_model->updateBrewery($update_brewery, $updateWhere);
+
+        //* 3) Prepare the Result object to be returned.
+        //? a) Return a successful operation
+        if ($rows_affected) {
+            return Result::success(
+                "The new breweries were updated successfully!",
+                ["rows_affected" => $rows_affected]
+            );
+        } else {
+            //? b) Return a failure operation
+            $errors = ["Abey, brewery name must be provided"];
+            return Result::failure(
+                "OH NO, NO GOOD",
+                $errors
+            );
+        }
+    }
+
+    public function doDeleteBrewery(array $ids): Result
+    {
+
+       //TODO: 1) USE THE Valitron library to validate the fields of the new collection to be processed (created, updated, or deleted).
+
+        $errors = [];
+        $validation_result = $this->validateInput(
+            ['brewery_id' => $ids[0] ?? null],
+            ['brewery_id' => ['required', 'integer']]
+        );
+
+        if (is_array($validation_result)) {
+            //! Invalid inputs.
+            $errors = ["The inputs are invalid. Please provide correct inputs"];
+            return Result::failure(
+                "Not good!",
+                $errors
+            );
+        }
+
+        //* 2) Pass the collection item to the model.
         $rowsDeleted = 0;
 
         foreach ($ids as $id) {
             $rowsDeleted += $this->breweries_model->deleteBrewery(['brewery_id' => $id]);
         }
 
-        if ($rowsDeleted < 1) {
-            return Result::failure("No rows deleted (IDs may not exist)", [
-                "rows_deleted" => $rowsDeleted
-            ]);
+        //* 3) Prepare the Result object to be returned.
+        //? a) Return a successful operation
+        if ($rowsDeleted > 0) {
+            return Result::success(
+                "The breweries were deleted successfully!",
+                ["rows_deleted" => $rowsDeleted]
+            );
+        } else {
+            //? b) Return a failure operation
+            $errors = ["No rows deleted (IDs may not exist)"];
+            return Result::failure(
+                "OH NO, NO GOOD",
+                $errors
+            );
         }
-
-        return Result::success("Breweries deleted successfully", [
-            "rows_deleted" => $rowsDeleted
-        ]);
     }
 }
