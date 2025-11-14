@@ -121,7 +121,7 @@ class BreweriesService extends BaseService
             );
         } else {
             //? b) Return a failure operation
-            $errors = ["Abey, brewery name must be provided"];
+            $errors = ["Abey, you need to input new data to update"];
             return Result::failure(
                 "OH NO, NO GOOD",
                 $errors
@@ -165,7 +165,7 @@ class BreweriesService extends BaseService
             );
         } else {
             //? b) Return a failure operation
-            $errors = ["No rows deleted (IDs may not exist)"];
+            $errors = ["No rows deleted (IDs may not exist, also make sure you input a number and not a character)"];
             return Result::failure(
                 "OH NO, NO GOOD",
                 $errors

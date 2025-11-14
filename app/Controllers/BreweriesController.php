@@ -4,10 +4,12 @@ namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
 use App\Domain\Services\BreweriesService;
+use App\Exceptions\HttpArrayNotFoundException;
 use App\Exceptions\HttpBadRequestException;
 use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
+use App\Exceptions\HttpBodyNotFoundException;
 use App\Validation\ValidationHelper;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -154,9 +156,12 @@ class BreweriesController extends BaseController
     //* POST /breweries
     public function handleCreateBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
+        if ($data === null) {
+            throw new HttpBodyNotFoundException($request);
+        }
+
         //dd($data);
         $result = $this->breweries_service->doCreateBrewery($data);
         if ($result->isSuccess()) {
@@ -177,22 +182,16 @@ class BreweriesController extends BaseController
     //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
-        $body = $request->getParsedBody();
-        if ($body === null) {
-            return $this->renderJson($response, [
-                "status" => "error",
-                "message" => "Invalid or missing JSON body."
-            ], 400);
+        $data = $request->getParsedBody();
+        if ($data === null) {
+            throw new HttpBodyNotFoundException($request);
         }
 
-        $isList = is_array($body) && array_keys($body) === range(0, count($body) - 1);
-        $items = $isList ? $body : [$body];
+        $isList = is_array($data) && array_keys($data) === range(0, count($data) - 1);
+        $items = $isList ? $data : [$data];
 
         if (empty($items)) {
-            return $this->renderJson($response, [
-                "status" => "error",
-                "message" => "Empty array provided."
-            ], 400);
+            throw new HttpNotFoundException($request);
         }
 
         $results = [];
@@ -200,21 +199,11 @@ class BreweriesController extends BaseController
 
         foreach ($items as $idx => $item) {
             if (!is_array($item)) {
-                $results[] = [
-                    "index" => $idx,
-                    "status" => "error",
-                    "message" => "Each item must be an object with fields."
-                ];
-                continue;
+                throw new HttpArrayNotFoundException($request, "Each item must be an object with fields.");
             }
 
             if (!isset($item['brewery_id'])) {
-                $results[] = [
-                    "index" => $idx,
-                    "status" => "error",
-                    "message" => "Missing brewery_id in item."
-                ];
-                continue;
+                throw new HttpInvalidNumberException($request, "Missing brewery_id");
             }
 
             $breweryId = $item['brewery_id'];
@@ -240,44 +229,42 @@ class BreweriesController extends BaseController
                 continue;
             }
 
-            $serviceResult = $this->breweries_service->doUpdateBrewery(
+            $result = $this->breweries_service->doUpdateBrewery(
                 $updateData,
                 ['brewery_id' => (int)$breweryId]
             );
 
-            if ($serviceResult->isSuccess()) {
-                $rows = (int)($serviceResult->getData()['rows_affected'] ?? 0);
+            if ($result->isSuccess()) {
+                $rows = (int)($result->getData()['rows_affected'] ?? 0);
                 $totalRows += $rows;
 
                 $results[] = [
-                    "index" => $idx,
                     "brewery_id" => (int)$breweryId,
                     "status" => "ok",
-                    "rows_affected" => $rows
                 ];
             } else {
                 $results[] = [
-                    "index" => $idx,
                     "brewery_id" => (int)$breweryId,
                     "status" => "error",
                     "message" => "Update failed",
-                    "details" => $serviceResult->getErrors()
+                    "details" => $result->getErrors()
                 ];
             }
         }
 
-        return $this->renderJson($response, [
+        $payload = [
             "status" => "ok",
             "total_rows_affected" => $totalRows,
-            "results" => $results
-        ], 200);
+            "details" => $results
+        ];
+
+        return $this->renderJson($response, $payload, 200);
     }
 
 
     //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
     public function handleDeleteBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
         $data = $request->getParsedBody();
 
         $ids = [];
@@ -293,17 +280,14 @@ class BreweriesController extends BaseController
         }
 
         if (empty($ids)) {
-            return $this->renderJson($response, [
-                "status" => "error",
-                "message" => "No brewery IDs provided for deletion"
-            ], 400);
+            throw new HttpInvalidNumberException($request, "No brewerey_Id provided");
         }
 
         $result = $this->breweries_service->doDeleteBrewery($ids);
 
         if ($result->isSuccess()) {
             //! return a json response
-            return $this->renderJson($response, $result->getData(), 201);
+            return $this->renderJson($response, $result->getData(), 200);
         }
 
         $payload = [
