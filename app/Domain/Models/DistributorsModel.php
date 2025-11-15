@@ -162,5 +162,3 @@ class DistributorsModel extends BaseModel
         return " ORDER BY {$allowedMap[$sortBy]} {$dir} ";
     }
 }
-
-

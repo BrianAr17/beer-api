@@ -141,6 +141,15 @@ class BeerStylesModel extends BaseModel
     {
         return $this->insert("beer_styles", $new_beer_style);
     }
+    public function updateBeerStyle(array $update_beer_style, array $updateWhere)
+    {
+        return $this->update("beer_styles", $update_beer_style, $updateWhere);
+    }
+
+    public function deleteBeerStyle(array $delete_where)
+    {
+        return $this->delete("beer_styles", $delete_where);
+    }
 
     /**
      * Build an ORDER BY clause from user input safely.
