@@ -6,6 +6,7 @@ info:
 servers:
   - url: http://localhost/beer-api
     description: Local server
+
 paths:
   /breweries:
     get:
@@ -98,6 +99,88 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+    post:
+      summary: Create a brewery.
+      description: >
+        Insert a single brewery
+        Returns the last inserted ID from the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BreweryCreate"
+
+      responses:
+        "201":
+          description: Brewery successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsertResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+    put:
+      summary: Update one or more breweries
+      description: >
+        Update existing brewery records. Each object must include a valid
+        `brewery_id`. You can send a single brewery object or an array of
+        brewery objects.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/BreweryUpdate"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/BreweryUpdate"
+      responses:
+        "200":
+          description: >
+            Update operation result with total affected rows and per-brewery status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+    delete:
+      summary: Delete one or more breweries
+      description: >
+        Deletes breweries by their IDs. Accepts an array of integer IDs.
+        Returns the total number of rows successfully deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+      responses:
+        "200":
+          description: Brewery deletion successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows_deleted:
+                    type: integer
+                    example: 2
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /breweries/{brewery_id}:
     get:
       summary: Get all breweries by ID
@@ -111,11 +194,16 @@ paths:
       responses:
         '200':
           description: Brewery found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brewery"
         '404':
-          description: Brewery not found
+          $ref: "#/components/responses/NotFound"
+
 components:
   schemas:
-    
+
     Brewery:
       type: object
       required:
@@ -166,6 +254,122 @@ components:
         employee_count:
           type: integer
           example: 250
+
+    BreweryCreate:
+      type: object
+      required:
+        - name
+        - brewery_type
+        - city
+        - state
+        - country
+        - website_url
+        - founded_year
+        - owner_name
+        - rating_avg
+        - employee_count
+      properties:
+        name:
+          type: string
+        brewery_type:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        website_url:
+          type: string
+          format: uri
+        founded_year:
+          type: integer
+        owner_name:
+          type: string
+        rating_avg:
+          type: number
+          format: float
+        employee_count:
+          type: integer
+
+    BreweryUpdate:
+      type: object
+      required:
+        - brewery_id
+        - name
+        - brewery_type
+        - city
+        - state
+        - country
+        - website_url
+        - founded_year
+        - owner_name
+        - rating_avg
+        - employee_count
+      properties:
+        brewery_id:
+          type: integer
+        name:
+          type: string
+        brewery_type:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        website_url:
+          type: string
+          format: uri
+        founded_year:
+          type: integer
+        owner_name:
+          type: string
+        rating_avg:
+          type: number
+          format: float
+        employee_count:
+          type: integer
+
+    InsertResult:
+      type: object
+      properties:
+        last_inserted_id:
+          type: string
+          description: >
+            The last inserted auto-incremented ID as returned by the database.
+          example: "13"
+
+    UpdateResult:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        total_rows_affected:
+          type: integer
+          example: 2
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              brewery_id:
+                type: integer
+                example: 9
+              status:
+                type: string
+                example: "ok"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+
   responses:
     BadRequest:
       description: Invalid query parameter or malformed request.

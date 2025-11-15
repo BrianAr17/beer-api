@@ -10,6 +10,7 @@ use App\Helpers\DateTimeHelper;
 use App\Middleware\ContentNegotiationMiddleware;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Validation\Validator;
 
 
 return static function (Slim\App $app): void {
@@ -52,6 +53,12 @@ return static function (Slim\App $app): void {
 
     //* ROUTE: POST /beer-styles
     $app->post('/beer-styles', [BeerStylesController::class, "handleCreateBeerStyle"]);
+
+    //* ROUTE: PUT /beer-styles
+    $app->put('/beer-styles', [BeerStylesController::class, "handleUpdateBeerStyle"]);
+
+    //* ROUTE: DELETE /beer-styles
+    $app->delete('/beer-styles', [BeerStylesController::class, "handleDeleteBeerStyle"]);
 
     //! PING
     //* ROUTE: GET /ping

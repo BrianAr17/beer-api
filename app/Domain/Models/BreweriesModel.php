@@ -121,7 +121,9 @@ class BreweriesModel extends BaseModel
         $defaultKey = 'name';
 
         $sql .= $this->buildOrderByFromSortParams(
-            $filters, $allowedSort, $defaultKey
+            $filters,
+            $allowedSort,
+            $defaultKey
         );
 
         return $this->paginate($sql, $pdo_values);
@@ -149,17 +151,20 @@ class BreweriesModel extends BaseModel
 
     //!Create function for breweries services
     //* For iteration #2
-    public function insertBrewery(array $new_brewery) {
+    public function insertBrewery(array $new_brewery)
+    {
         return $this->insert("breweries", $new_brewery);
         //TODO: READ THE DOC, you have examples of their usage.
     }
 
-    public function updateBrewery(array $update_brewery, array $updateWhere) {
+    public function updateBrewery(array $update_brewery, array $updateWhere)
+    {
         return $this->update("breweries", $update_brewery, $updateWhere);
         //TODO: READ THE DOC, you have examples of their usage.
     }
 
-    public function deleteBrewery(array $delete_where) {
+    public function deleteBrewery(array $delete_where)
+    {
         return $this->delete("breweries", $delete_where);
         //TODO: READ THE DOC, you have examples of their usage.
     }
