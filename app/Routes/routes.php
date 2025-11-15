@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Validation\Validator;
 
-
 return static function (Slim\App $app): void {
 
     // Routes without authentication check: /login, /token
@@ -37,12 +36,20 @@ return static function (Slim\App $app): void {
     $app->get('/breweries/{brewery_id}', [BreweriesController::class, 'handleGetBreweriesByID']);
 
     //! Distributors
-    //* ROUTE: Distributors
-    // GET all distributors
+    //* ROUTE: GET all distributors
     $app->get('/distributors', [DistributorsController::class, 'handleGetDistributors']);
 
-    // GET distributor by ID
+    //* ROUTE: GET distributor by ID
     $app->get('/distributors/{distributor_id}', [DistributorsController::class, 'handleGetDistributorByID']);
+
+    //* ROUTE: POST /distributors
+    $app->post('/distributors', [DistributorsController::class, 'handleCreateDistributor']);
+
+    //* ROUTE: PUT /distributors
+    $app->put('/distributors', [DistributorsController::class, 'handleUpdateDistributor']);
+
+    //* ROUTE: DELETE /distributors
+    $app->delete('/distributors', [DistributorsController::class, 'handleDeleteDistributor']);
 
     //! Beer Styles
     //* ROUTE: GET /beer-styles
