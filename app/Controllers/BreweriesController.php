@@ -4,10 +4,12 @@ namespace App\Controllers;
 
 use App\Domain\Models\BreweriesModel;
 use App\Domain\Services\BreweriesService;
+use App\Exceptions\HttpArrayNotFoundException;
 use App\Exceptions\HttpBadRequestException;
 use App\Exceptions\HttpInvalidStringException;
 use App\Exceptions\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
+use App\Exceptions\HttpBodyNotFoundException;
 use App\Validation\ValidationHelper;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -154,9 +156,12 @@ class BreweriesController extends BaseController
     //* POST /breweries
     public function handleCreateBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
+        if ($data === null) {
+            throw new HttpBodyNotFoundException($request);
+        }
+
         //dd($data);
         $result = $this->breweries_service->doCreateBrewery($data);
         if ($result->isSuccess()) {
@@ -177,54 +182,119 @@ class BreweriesController extends BaseController
     //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
         $data = $request->getParsedBody();
-
-        $updateData  = $data['data']  ?? [];
-        $updateWhere = $data['where'] ?? [];
-
-        //* 3) Call the service layer to perform the update.
-        $result = $this->breweries_service->doUpdateBrewery($updateData, $updateWhere);
-
-        //* 4) Handle the Result object.
-        if ($result->isSuccess()) {
-            //! return a json response
-            return $this->renderJson($response, $result->getData(), 201);
+        if ($data === null) {
+            throw new HttpBodyNotFoundException($request);
         }
 
-        //* The operation failed, return an error response.
+        $isList = is_array($data) && array_keys($data) === range(0, count($data) - 1);
+        $items = $isList ? $data : [$data];
+
+        if (empty($items)) {
+            throw new HttpNotFoundException($request);
+        }
+
+        $results = [];
+        $totalRows = 0;
+
+        foreach ($items as $idx => $item) {
+            if (!is_array($item)) {
+                throw new HttpArrayNotFoundException($request, "Each item must be an object with fields.");
+            }
+
+            if (!isset($item['brewery_id'])) {
+                throw new HttpInvalidNumberException($request, "Missing brewery_id");
+            }
+
+            $breweryId = $item['brewery_id'];
+            if (!is_numeric($breweryId)) {
+                $results[] = [
+                    "index" => $idx,
+                    "status" => "error",
+                    "message" => "brewery_id must be numeric."
+                ];
+                continue;
+            }
+
+            $updateData = $item;
+            unset($updateData['brewery_id']);
+
+            if (empty($updateData)) {
+                $results[] = [
+                    "index" => $idx,
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "error",
+                    "message" => "No fields to update for this item."
+                ];
+                continue;
+            }
+
+            $result = $this->breweries_service->doUpdateBrewery(
+                $updateData,
+                ['brewery_id' => (int)$breweryId]
+            );
+
+            if ($result->isSuccess()) {
+                $rows = (int)($result->getData()['rows_affected'] ?? 0);
+                $totalRows += $rows;
+
+                $results[] = [
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "ok",
+                ];
+            } else {
+                $results[] = [
+                    "brewery_id" => (int)$breweryId,
+                    "status" => "error",
+                    "message" => "Update failed",
+                    "details" => $result->getErrors()
+                ];
+            }
+        }
+
         $payload = [
-            "status" => "error",
-            "message" => "Failed to update the new brewery, refer to the details below",
-            "details" => $result->getErrors()
+            "status" => "ok",
+            "total_rows_affected" => $totalRows,
+            "details" => $results
         ];
 
-        return $this->renderJson($response, $payload, 400);
+        return $this->renderJson($response, $payload, 200);
     }
 
 
     //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
     public function handleDeleteBrewery(Request $request, Response $response): Response
     {
-        echo "QUACK!";
-        //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
 
-        $deleteWhere = $data['where'] ?? [];
+        $ids = [];
 
-        $result = $this->breweries_service->doDeleteBrewery($deleteWhere);
-        if ($result->isSuccess()) {
-            //! return a json response
-            return $this->renderJson($response, $result->getData(), 201);
+        if (isset($data[0]) && is_array($data[0])) {
+            foreach ($data as $item) {
+                if (isset($item['brewery_id'])) {
+                    $ids[] = (int)$item['brewery_id'];
+                }
+            }
+        } elseif (is_array($data)) {
+            $ids = array_map('intval', $data);
         }
 
-        //* The operation failed, return an error response.
+        if (empty($ids)) {
+            throw new HttpInvalidNumberException($request, "No brewerey_Id provided");
+        }
+
+        $result = $this->breweries_service->doDeleteBrewery($ids);
+
+        if ($result->isSuccess()) {
+            //! return a json response
+            return $this->renderJson($response, $result->getData(), 200);
+        }
+
         $payload = [
             "status" => "error",
             "message" => "Failed to delete the new brewery, refer to the details below",
             "details" => $result->getErrors()
         ];
-
         return $this->renderJson($response, $payload, 400);
     }
      /// End of the callback
