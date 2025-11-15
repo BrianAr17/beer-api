@@ -41,15 +41,15 @@ class DistributorsModel extends BaseModel
         $pdo_values = [];
         $sql = "SELECT * FROM distributors WHERE 1";
 
-        $distributor_id_filter = $filters["distributor_id"] ?? '';
-        $name_filter           = $filters["name"] ?? '';
-        $region_filter         = $filters["region"] ?? '';
-        $contact_email_filter  = $filters["contact_email"] ?? '';
-        $phone_number_filter   = $filters["phone_number"] ?? '';
-        $founded_year_filter   = $filters["founded_year"] ?? '';
-        $license_number_filter = $filters["license_number"] ?? '';
+        $distributor_id_filter  = $filters["distributor_id"] ?? '';
+        $name_filter            = $filters["name"] ?? '';
+        $region_filter          = $filters["region"] ?? '';
+        $contact_email_filter   = $filters["contact_email"] ?? '';
+        $phone_number_filter    = $filters["phone_number"] ?? '';
+        $founded_year_filter    = $filters["founded_year"] ?? '';
+        $license_number_filter  = $filters["license_number"] ?? '';
         $warehouse_count_filter = $filters["warehouse_count"] ?? '';
-        $rating_avg_filter     = $filters["rating_avg"] ?? '';
+        $rating_avg_filter      = $filters["rating_avg"] ?? '';
 
         if (!empty($distributor_id_filter)) {
             $sql .= " AND distributor_id = :distributor_id";
@@ -96,7 +96,7 @@ class DistributorsModel extends BaseModel
             'phone_number'   => 'phone_number',
             'founded_year'   => 'founded_year',
             'license_number' => 'license_number',
-            'warehouse_count' => 'warehouse_count',
+            'warehouse_count'=> 'warehouse_count',
             'rating_avg'     => 'rating_avg',
         ];
         $defaultKey = 'name';
@@ -104,23 +104,6 @@ class DistributorsModel extends BaseModel
         $sql .= $this->buildOrderByFromSortParams($filters, $allowedSort, $defaultKey);
 
         return $this->paginate($sql, $pdo_values);
-    }
-
-    //!Create function for breweries services
-    //* For iteration #2
-    public function insertDistributors(array $new_distributors) {
-        return $this->insert("distributors", $new_distributors);
-        //TODO: READ THE DOC, you have examples of their usage.
-    }
-
-    public function updateDistributors(array $update_distributors, array $updateWhere) {
-        return $this->update("distributors", $update_distributors, $updateWhere);
-        //TODO: READ THE DOC, you have examples of their usage.
-    }
-
-    public function deleteDistributors(array $delete_where) {
-        return $this->delete("distributors", $delete_where);
-        //TODO: READ THE DOC, you have examples of their usage.
     }
 
     /**
@@ -138,6 +121,25 @@ class DistributorsModel extends BaseModel
         return $this->fetchSingle($sql, ["distributor_id" => $distributor_id]);
     }
 
+    //! CRUD functions
+    public function insertDistributor(array $new_distributor)
+    {
+        return $this->insert("distributors", $new_distributor);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
+    public function updateDistributor(array $update_distributor, array $updateWhere)
+    {
+        return $this->update("distributors", $update_distributor, $updateWhere);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
+    public function deleteDistributor(array $delete_where)
+    {
+        return $this->delete("distributors", $delete_where);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
     /**
      * Build an ORDER BY clause from user input safely.
      *
@@ -151,8 +153,8 @@ class DistributorsModel extends BaseModel
      */
     private function buildOrderByFromSortParams(array $filters, array $allowedMap, string $defaultKey): string
     {
-        $sortBy = $filters['sort_by'] ?? $defaultKey;
-        $order  = strtolower($filters['order'] ?? 'asc');
+        $sortBy = isset($filters['sort_by']) ? trim((string)$filters['sort_by']) : $defaultKey;
+        $order  = isset($filters['order']) ? strtolower(trim((string)$filters['order'])) : 'asc';
 
         if (!isset($allowedMap[$sortBy])) {
             $sortBy = $defaultKey;
