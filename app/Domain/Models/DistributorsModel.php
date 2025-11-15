@@ -106,6 +106,23 @@ class DistributorsModel extends BaseModel
         return $this->paginate($sql, $pdo_values);
     }
 
+    //!Create function for breweries services
+    //* For iteration #2
+    public function insertDistributors(array $new_distributors) {
+        return $this->insert("distributors", $new_distributors);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
+    public function updateDistributors(array $update_distributors, array $updateWhere) {
+        return $this->update("distributors", $update_distributors, $updateWhere);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
+    public function deleteDistributors(array $delete_where) {
+        return $this->delete("distributors", $delete_where);
+        //TODO: READ THE DOC, you have examples of their usage.
+    }
+
     /**
      * Retrieve a distributor by its identifier.
      *

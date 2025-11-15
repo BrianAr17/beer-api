@@ -16,7 +16,7 @@ class DistributorsService extends BaseService
 
         //* 2) Pass the collection item to the model.
         foreach ($new_distributors as $key => $new_distributor) {
-            $last_inserted_id = $this->distributors_model->insertDistributor($new_distributors[$key]);
+            $last_inserted_id = $this->distributors_model->insertDistributors($new_distributors[$key]);
         }
 
         //* 3) Prepare the Result object to be returned.
@@ -34,5 +34,19 @@ class DistributorsService extends BaseService
         // );
     }
 
-    
+    public function doUpdatingDistributors(array $new_distributors, array $updateWhere) {
+
+        foreach($new_distributors as )
+
+
+
+    }
+
+
+
+    public function doDeletingDistributors(array array $delete_where) {
+
+
+
+    }
 }

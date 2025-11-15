@@ -40,7 +40,7 @@ return static function (Slim\App $app): void {
     // GET all distributors
     $app->get('/distributors', [DistributorsController::class, 'handleGetDistributors']);
 
-    // GET distributor by ID
+    //* GET distributor by ID
     $app->get('/distributors/{distributor_id}', [DistributorsController::class, 'handleGetDistributorByID']);
 
     //! Beer Styles
