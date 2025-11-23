@@ -88,7 +88,7 @@ class BreweriesController extends BaseController
         $sortBy = $filters['sort_by'] ?? 'brewery_id';
         $order  = strtolower($filters['order'] ?? 'asc');
 
-        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country','website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
+        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country', 'website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
         $validOrders = ['asc', 'desc'];
 
         if (!in_array($sortBy, $validSortByFields)) {
@@ -130,7 +130,7 @@ class BreweriesController extends BaseController
      * @throws HttpNotFoundException      If the brewery does not exist.
      * @throws PDOException               On database-related errors.
      */
-   public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
+    public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
     {
         //* 1) Get the received ID from the URI.
         $brewery_id = $uri_args["brewery_id"];
@@ -144,16 +144,44 @@ class BreweriesController extends BaseController
         $brewery = $this->breweries_model->getBreweryById($brewery_id);
 
 
-        if(!$brewery) {
+        if (!$brewery) {
             throw new HttpNotFoundException($request);
         }
 
         $response->getBody()->write(json_encode($brewery));
         return $response->withHeader('Content-Type', 'application/json');
-
     }
 
-    //* POST /breweries
+    /**
+     * Handle POST /breweries.
+     *
+     * Creates a new brewery record using the BrewersService.
+     * Expects a JSON body with the brewery fields. On success,
+     * returns the created brewery data with HTTP 201.
+     *
+     * Example body:
+     * {
+     *   "name": "Some Brewery",
+     *   "brewery_type": "micro",
+     *   "city": "Montreal",
+     *   "state": "Quebec",
+     *   "country": "Canada",
+     *   "owner_name": "John Doe",
+     *   "founded_year": 1999,
+     *   "employee_count": 42
+     * }
+     *
+     * @param Request  $request  Incoming HTTP request containing the JSON payload.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response with created brewery data or error details.
+     *
+     * @throws HttpBodyNotFoundException If the request body is missing or not parseable.
+     * @throws HttpInvalidStringException If a string field fails validation at the service layer.
+     * @throws HttpInvalidNumberException If a numeric field fails validation at the service layer.
+     * @throws HttpBadRequestException    For generic validation/format issues from the service layer.
+     * @throws PDOException               On database-related errors.
+     */
     public function handleCreateBrewery(Request $request, Response $response): Response
     {
         //* 1) Get the request payload (what the client sent embedded in the request body).
@@ -179,7 +207,43 @@ class BreweriesController extends BaseController
         return $this->renderJson($response, $payload, 400);
     }
 
-    //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
+    /**
+     * Handle PUT/PATCH /breweries.
+     *
+     * Updates one or multiple breweries.
+     *
+     * Accepts either:
+     * - A single object:
+     *   {
+     *     "brewery_id": 1,
+     *     "name": "Updated Name"
+     *   }
+     *
+     * - Or an array of objects:
+     *   [
+     *     { "brewery_id": 1, "name": "Updated Name" },
+     *     { "brewery_id": 2, "city": "Toronto" }
+     *   ]
+     *
+     * Each object MUST contain `brewery_id`; all other fields are treated as
+     * fields to update. Empty update sets for a given item will be reported
+     * as an error for that item.
+     *
+     * Response includes:
+     * - total_rows_affected: int
+     * - details: array of per-item statuses.
+     *
+     * @param Request  $request  Incoming HTTP request with JSON body.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response summarizing per-item update results.
+     *
+     * @throws HttpBodyNotFoundException   If the request body is missing or not parseable.
+     * @throws HttpArrayNotFoundException  If an item in the list is not a valid object/array.
+     * @throws HttpInvalidNumberException  If brewery_id is missing or invalid.
+     * @throws HttpNotFoundException       If no updatable items are provided.
+     * @throws PDOException                On database-related errors.
+     */
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -262,7 +326,32 @@ class BreweriesController extends BaseController
     }
 
 
-    //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
+    /**
+     * Handle DELETE /breweries.
+     *
+     * Deletes one or multiple breweries by ID.
+     *
+     * Accepts either:
+     * - A simple array of IDs:
+     *   [1, 2, 3]
+     *
+     * - Or an array of objects containing brewery_id:
+     *   [
+     *     { "brewery_id": 1 },
+     *     { "brewery_id": 2 }
+     *   ]
+     *
+     * All collected IDs are passed to the service for deletion. If no valid IDs
+     * are found, an HttpInvalidNumberException is thrown.
+     *
+     * @param Request  $request  Incoming HTTP request containing the IDs in the body.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response with deletion result or error details.
+     *
+     * @throws HttpInvalidNumberException If no brewery_id values are provided or IDs are invalid.
+     * @throws PDOException              On database-related errors.
+     */
     public function handleDeleteBrewery(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -297,6 +386,5 @@ class BreweriesController extends BaseController
         ];
         return $this->renderJson($response, $payload, 400);
     }
-     /// End of the callback
-
+    /// End of the callback
 }
