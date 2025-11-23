@@ -52,6 +52,7 @@ class ComposerStaticInit594ace0187e82bde2d5cc31546af3297
         ),
         'F' => 
         array (
+            'Frostybee\\Valicomb\\' => 19,
             'Firebase\\JWT\\' => 13,
             'Fig\\Http\\Message\\' => 17,
             'FastRoute\\' => 10,
@@ -124,6 +125,10 @@ class ComposerStaticInit594ace0187e82bde2d5cc31546af3297
         'GuzzleHttp\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
+        ),
+        'Frostybee\\Valicomb\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/frostybee/valicomb/src/Valicomb',
         ),
         'Firebase\\JWT\\' => 
         array (

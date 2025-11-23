@@ -1,0 +1,54 @@
+{
+    "name": "frostybee/valicomb",
+    "type": "library",
+    "description": "Modern, type-safe PHP validation library for PHP 8.2+ with security-first design and zero dependencies. This is a fork of vlucas/valitron.",
+    "keywords": ["valicomb", "validation", "validator", "valid", "php8", "type-safe", "security"],
+    "homepage": "https://github.com/frostybee/valicomb",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Vance Lucas (original author)",
+            "email": "vance@vancelucas.com",
+            "homepage": "https://www.vancelucas.com"
+        },
+        {
+            "name": "FrostyBee (current maintainer)",
+            "homepage": "https://github.com/frostybee"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Frostybee\\Valicomb\\": "src/Valicomb"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Frostybee\\Valicomb\\Tests\\": "tests/Valicomb"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse",
+        "cs-fix": "php-cs-fixer fix",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "benchmark": "php benchmarks/ValidationBenchmark.php",
+        "check-all": [
+            "@test",
+            "@analyse",
+            "@cs-check"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    }
+}

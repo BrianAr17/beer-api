@@ -11,6 +11,7 @@ use App\Exceptions\HttpNotFoundException;
 use App\Exceptions\HttpInvalidNumberException;
 use App\Exceptions\HttpBodyNotFoundException;
 use App\Validation\ValidationHelper;
+use Frostybee\Valicomb\Validator;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -88,7 +89,7 @@ class BreweriesController extends BaseController
         $sortBy = $filters['sort_by'] ?? 'brewery_id';
         $order  = strtolower($filters['order'] ?? 'asc');
 
-        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country','website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
+        $validSortByFields = ['brewery_id', 'name', 'brewery_type', 'city', 'state', 'country', 'website_url', 'founded_year', 'owner_name', 'rating_avg', 'employee_count'];
         $validOrders = ['asc', 'desc'];
 
         if (!in_array($sortBy, $validSortByFields)) {
@@ -130,7 +131,7 @@ class BreweriesController extends BaseController
      * @throws HttpNotFoundException      If the brewery does not exist.
      * @throws PDOException               On database-related errors.
      */
-   public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
+    public function handleGetBreweriesByID(Request $request, Response $response, array $uri_args): Response
     {
         //* 1) Get the received ID from the URI.
         $brewery_id = $uri_args["brewery_id"];
@@ -144,23 +145,80 @@ class BreweriesController extends BaseController
         $brewery = $this->breweries_model->getBreweryById($brewery_id);
 
 
-        if(!$brewery) {
+        if (!$brewery) {
             throw new HttpNotFoundException($request);
         }
 
         $response->getBody()->write(json_encode($brewery));
         return $response->withHeader('Content-Type', 'application/json');
-
     }
 
-    //* POST /breweries
+    /**
+     * Handle POST /breweries.
+     *
+     * Creates a new brewery record using the BrewersService.
+     * Expects a JSON body with the brewery fields. On success,
+     * returns the created brewery data with HTTP 201.
+     *
+     * Example body:
+     * {
+     *   "name": "Some Brewery",
+     *   "brewery_type": "micro",
+     *   "city": "Montreal",
+     *   "state": "Quebec",
+     *   "country": "Canada",
+     *   "owner_name": "John Doe",
+     *   "founded_year": 1999,
+     *   "employee_count": 42
+     * }
+     *
+     * @param Request  $request  Incoming HTTP request containing the JSON payload.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response with created brewery data or error details.
+     *
+     * @throws HttpBodyNotFoundException If the request body is missing or not parseable.
+     * @throws HttpInvalidStringException If a string field fails validation at the service layer.
+     * @throws HttpInvalidNumberException If a numeric field fails validation at the service layer.
+     * @throws HttpBadRequestException    For generic validation/format issues from the service layer.
+     * @throws PDOException               On database-related errors.
+     */
     public function handleCreateBrewery(Request $request, Response $response): Response
     {
         //* 1) Get the request payload (what the client sent embedded in the request body).
         $data = $request->getParsedBody();
+
         if ($data === null) {
             throw new HttpBodyNotFoundException($request);
         }
+
+        $v = new Validator($data);
+        $v->mapManyFieldsToRules([
+            'name' => ['required', ['lengthMin', 5]],
+            'brewery_type' => ['required', ['lengthMin', 5]],
+            'city' => ['required', ['lengthBetween', 1, 25]],
+            'state' => ['required', ['lengthBetween', 1, 2]],
+            'country' => ['required', ['lengthBetween', 1, 60]],
+            'website_url' => ['required', 'url'],
+            'founded_year' => ['required', 'integer', ['min', 1000], ['max', (int) date('Y')]],
+            'owner_name' => ['required', ['lengthBetween', 1, 50]],
+            'rating_avg' => ['required', 'numeric', ['min', 0], ['max', 5]],
+            'employee_count' => ['required', 'integer',['min', 1]]
+        ]);
+
+        if (!$v->validate()) {
+            $payload = [
+                'status' => 'error',
+                'message' => 'The data that was inputed is invalid, enter proper data',
+                'errors' => $v->errors(),
+            ];
+
+            return $this->renderJson($response, $payload, 400);
+        }
+
+        $data['founded_year'] = (int) $data['founded_year'];
+        $data['rating_avg'] = (float) $data['rating_avg'];
+        $data['employee_count'] = (int) $data['employee_count'];
 
         //dd($data);
         $result = $this->breweries_service->doCreateBrewery($data);
@@ -179,90 +237,172 @@ class BreweriesController extends BaseController
         return $this->renderJson($response, $payload, 400);
     }
 
-    //TODO: IN BreweriesServices, IMPLEMENT doUpdateBrewery before handling it in controller
+    /**
+     * Handle PUT /breweries.
+     *
+     * Updates a single brewery record.
+     *
+     * The request body must be a JSON object containing:
+     * - `brewery_id` (required): Integer > 0, identifying the brewery to update.
+     * - Any subset of the updatable fields (all optional, but validated if present):
+     *   - `name`
+     *   - `brewery_type`
+     *   - `city`
+     *   - `state`
+     *   - `country`
+     *   - `website_url`
+     *   - `founded_year`
+     *   - `owner_name`
+     *   - `rating_avg`
+     *   - `employee_count`
+     *
+     * Example body:
+     * {
+     *   "brewery_id": 1,
+     *   "name": "Updated Name",
+     *   "rating_avg": 4.5
+     * }
+     *
+     * Validation:
+     * - Uses the Valicomb library to validate the request body.
+     * - If validation fails, returns HTTP 400 with a JSON payload:
+     *   {
+     *     "status": "error",
+     *     "message": "The data that was inputed is invalid, enter proper data",
+     *     "errors": { ...field-specific errors... }
+     *   }
+     * - If no updatable fields (other than `brewery_id`) are provided, returns HTTP 400
+     *   with an error indicating that there are no fields to update.
+     *
+     * Successful response:
+     * - On success, returns HTTP 200 with a JSON payload similar to:
+     *   {
+     *     "status": "ok",
+     *     "brewery_id": 1,
+     *     "data": { ...service result data... }
+     *   }
+     *
+     * Failure at service/DB level:
+     * - If the update operation fails in the service or database layer,
+     *   returns HTTP 400 with:
+     *   {
+     *     "status": "error",
+     *     "brewery_id": 1,
+     *     "message": "Update failed",
+     *     "details": { ...service error details... }
+     *   }
+     *
+     * @param Request  $request  Incoming HTTP request with JSON body.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response indicating success or failure of the update.
+     *
+     * @throws HttpBodyNotFoundException If the request body is missing or not parseable as an array.
+     * @throws PDOException              On database-related errors thrown from the service/model layer.
+     */
     public function handleUpdateBrewery(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
-        if ($data === null) {
+
+        if ($data === null || !is_array($data)) {
             throw new HttpBodyNotFoundException($request);
         }
 
-        $isList = is_array($data) && array_keys($data) === range(0, count($data) - 1);
-        $items = $isList ? $data : [$data];
+        $v = new Validator($data);
+        $v->mapManyFieldsToRules([
+            'brewery_id'     => ['required', 'integer', ['min', 1]],
+            'name'           => [['lengthMin', 5]],
+            'brewery_type'   => [['lengthMin', 5]],
+            'city'           => [['lengthBetween', 1, 25]],
+            'state'          => [['lengthBetween', 1, 2]],
+            'country'        => [['lengthBetween', 1, 60]],
+            'website_url'    => ['url'],
+            'founded_year'   => ['integer', ['min', 1000], ['max', (int) date('Y')]],
+            'owner_name'     => [['lengthBetween', 1, 50]],
+            'rating_avg'     => ['numeric', ['min', 0], ['max', 5]],
+            'employee_count' => ['integer', ['min', 1]],
+        ]);
 
-        if (empty($items)) {
-            throw new HttpNotFoundException($request);
+        if (!$v->validate()) {
+            $payload = [
+                'status'  => 'error',
+                'message' => 'The data that was inputed is invalid, enter proper data',
+                'errors'  => $v->errors(),
+            ];
+
+            return $this->renderJson($response, $payload, 400);
         }
 
-        $results = [];
-        $totalRows = 0;
+        $breweryId = (int) $data['brewery_id'];
 
-        foreach ($items as $idx => $item) {
-            if (!is_array($item)) {
-                throw new HttpArrayNotFoundException($request, "Each item must be an object with fields.");
-            }
+        $updateData = $data;
+        unset($updateData['brewery_id']);
 
-            if (!isset($item['brewery_id'])) {
-                throw new HttpInvalidNumberException($request, "Missing brewery_id");
-            }
+        if (isset($updateData['founded_year'])) {
+            $updateData['founded_year'] = (int) $updateData['founded_year'];
+        }
+        if (isset($updateData['rating_avg'])) {
+            $updateData['rating_avg'] = (float) $updateData['rating_avg'];
+        }
+        if (isset($updateData['employee_count'])) {
+            $updateData['employee_count'] = (int) $updateData['employee_count'];
+        }
 
-            $breweryId = $item['brewery_id'];
-            if (!is_numeric($breweryId)) {
-                $results[] = [
-                    "index" => $idx,
-                    "status" => "error",
-                    "message" => "brewery_id must be numeric."
-                ];
-                continue;
-            }
+        if (empty($updateData)) {
+            $payload = [
+                'status'      => 'error',
+                'brewery_id'  => $breweryId,
+                'message'     => 'No fields to update for this brewery.',
+            ];
 
-            $updateData = $item;
-            unset($updateData['brewery_id']);
+            return $this->renderJson($response, $payload, 400);
+        }
 
-            if (empty($updateData)) {
-                $results[] = [
-                    "index" => $idx,
-                    "brewery_id" => (int)$breweryId,
-                    "status" => "error",
-                    "message" => "No fields to update for this item."
-                ];
-                continue;
-            }
+        $result = $this->breweries_service->doUpdateBrewery(
+            $updateData,
+            ['brewery_id' => $breweryId]
+        );
 
-            $result = $this->breweries_service->doUpdateBrewery(
-                $updateData,
-                ['brewery_id' => (int)$breweryId]
-            );
+        if ($result->isSuccess()) {
+            $payload = [
+                'status'      => 'ok',
+                'brewery_id'  => $breweryId,
+                'data'        => $result->getData(),
+            ];
 
-            if ($result->isSuccess()) {
-                $rows = (int)($result->getData()['rows_affected'] ?? 0);
-                $totalRows += $rows;
-
-                $results[] = [
-                    "brewery_id" => (int)$breweryId,
-                    "status" => "ok",
-                ];
-            } else {
-                $results[] = [
-                    "brewery_id" => (int)$breweryId,
-                    "status" => "error",
-                    "message" => "Update failed",
-                    "details" => $result->getErrors()
-                ];
-            }
+            return $this->renderJson($response, $payload, 200);
         }
 
         $payload = [
-            "status" => "ok",
-            "total_rows_affected" => $totalRows,
-            "details" => $results
+            'status'      => 'error',
+            'brewery_id'  => $breweryId,
+            'message'     => 'Update failed',
+            'details'     => $result->getErrors(),
         ];
 
-        return $this->renderJson($response, $payload, 200);
+        return $this->renderJson($response, $payload, 400);
     }
 
-
-    //TODO: IN BreweriesServices, IMPLEMENT doDeleteBrewery before handling it in controller
+    
+    /**
+     * Handle DELETE /breweries.
+     *
+     * Deletes one or multiple breweries by ID.
+     *
+     * Example body:
+     * - A simple array of IDs:
+     *   [1, 2, 3]
+     * All collected IDs are passed to the service for deletion. If no valid IDs
+     * are found, an HttpInvalidNumberException is thrown.
+     *
+     * @param Request  $request  Incoming HTTP request containing the IDs in the body.
+     * @param Response $response HTTP response to write to.
+     *
+     * @return Response JSON response with deletion result or error details.
+     *
+     * @throws HttpInvalidNumberException If no brewery_id values are provided or IDs are invalid.
+     * @throws PDOException              On database-related errors.
+     */
     public function handleDeleteBrewery(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -297,6 +437,5 @@ class BreweriesController extends BaseController
         ];
         return $this->renderJson($response, $payload, 400);
     }
-     /// End of the callback
-
+    /// End of the callback
 }
