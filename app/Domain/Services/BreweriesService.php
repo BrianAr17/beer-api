@@ -46,11 +46,12 @@ class BreweriesService extends BaseService
             'rating_avg' => [
                 'required',
                 'numeric',
+                ['min', 0],
                 ['max', 5]
             ],
             'employee_count' => [
                 'required',
-                'numeric',
+                'integer',
                 ['min', 1]
             ],
         );
