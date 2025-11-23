@@ -212,18 +212,12 @@ class BreweriesController extends BaseController
      *
      * Updates one or multiple breweries.
      *
-     * Accepts either:
+     * Accepts:
      * - A single object:
      *   {
      *     "brewery_id": 1,
      *     "name": "Updated Name"
      *   }
-     *
-     * - Or an array of objects:
-     *   [
-     *     { "brewery_id": 1, "name": "Updated Name" },
-     *     { "brewery_id": 2, "city": "Toronto" }
-     *   ]
      *
      * Each object MUST contain `brewery_id`; all other fields are treated as
      * fields to update. Empty update sets for a given item will be reported
@@ -331,16 +325,9 @@ class BreweriesController extends BaseController
      *
      * Deletes one or multiple breweries by ID.
      *
-     * Accepts either:
+     * Accepts:
      * - A simple array of IDs:
      *   [1, 2, 3]
-     *
-     * - Or an array of objects containing brewery_id:
-     *   [
-     *     { "brewery_id": 1 },
-     *     { "brewery_id": 2 }
-     *   ]
-     *
      * All collected IDs are passed to the service for deletion. If no valid IDs
      * are found, an HttpInvalidNumberException is thrown.
      *
